@@ -1,7 +1,6 @@
 package Catmandu::BagIt;
 
 use strict;
-use 5.008_005;
 our $VERSION = '0.01';
 
 1;

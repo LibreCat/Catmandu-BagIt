@@ -36,6 +36,8 @@
       },
       "runtime" : {
          "requires" : {
+            "Archive::BagIt" : "0.045",
+            "Catmandu" : "0.9204",
             "perl" : "5.008005"
          }
       },
@@ -46,6 +48,17 @@
       }
    },
    "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/LibreCat/Catmandu-BagIt/issues"
+      },
+      "homepage" : "https://github.com/LibreCat/Catmandu-BagIt",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/LibreCat/Catmandu-BagIt.git",
+         "web" : "https://github.com/LibreCat/Catmandu-BagIt"
+      }
+   },
    "version" : "0.01"
 }
 

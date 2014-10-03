@@ -1,0 +1,3 @@
+Payload-Oxum: 40447.19
+Bagging-Date: 2014-10-03
+Bag-Size: 39.6 KB
