@@ -3,7 +3,9 @@ requires 'perl', '5.008005';
 # requires 'Some::Module', 'VERSION';
 
 on test => sub {
-    requires 'Test::More', '0.96';
+  requires 'Test::Deep', '0.112';
+  requires 'Test::Exception', '0.32';
+  requires 'Test::More', '1.001003';
 };
 
 requires 'Catmandu','0.9204';

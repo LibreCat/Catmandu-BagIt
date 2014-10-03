@@ -26,7 +26,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build::Tiny" : "0.036"
+            "Module::Build::Tiny" : "0.038"
          }
       },
       "develop" : {
@@ -43,7 +43,9 @@
       },
       "test" : {
          "requires" : {
-            "Test::More" : "0.96"
+            "Test::Deep" : "0.112",
+            "Test::Exception" : "0.32",
+            "Test::More" : "1.001003"
          }
       }
    },
