@@ -13,4 +13,10 @@ BEGIN {
 }
 require_ok $pkg;
 
-done_testing 2;
+my $importer = $pkg->new(bags => ['bags/demo01','bags/demo02']);
+
+isa_ok $importer, $pkg;
+
+is  $importer->count , 2 , 'reading 2 bags';
+
+done_testing 4;
