@@ -1,2 +1,3 @@
 2014-10-03
   * Archive::BagIt won't install on perl 5.18 osx . MooseX::App::Cmd seems nor to be compatible
+  * Archive::BagIt perl 5.10 ok.

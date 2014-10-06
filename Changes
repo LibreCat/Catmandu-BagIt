@@ -2,3 +2,5 @@ Revision history for Catmandu-BagIt
 
 {{$NEXT}}
         - Initial release
+        - Adding Catmandu::Importer skeleton
+        - Adding Catmandu::Exporter skeleton

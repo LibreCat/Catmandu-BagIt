@@ -15,11 +15,20 @@ sub generator {
 
     sub {
     	my $dir = shift @bags;
-    	my $bag = Archive::BagIt->new($dir);
 
-    	return undef unless $dir;
-        { _id => $dir };
+    	return undef unless defined $dir && -r $dir;
+
+    	my $bag = $self->read_bag($dir);
+    	return undef unless defined $bag;
+        
+        $bag;
     };
+}
+
+sub read_bag {
+	my ($self,$dir) = @_;
+	my $bag = Archive::BagIt->new($dir);
+	{ _id => $dir };
 }
 
 1;
