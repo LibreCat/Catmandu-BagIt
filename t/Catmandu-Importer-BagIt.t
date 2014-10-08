@@ -14,7 +14,7 @@ BEGIN {
 }
 require_ok $pkg;
 
-my $importer = $pkg->new(bags => ['bags/demo01','bags/demo02']);
+my $importer = $pkg->new(bags => ['bags/demo01','bags/demo02'] , verify => 1);
 
 isa_ok $importer, $pkg;
 

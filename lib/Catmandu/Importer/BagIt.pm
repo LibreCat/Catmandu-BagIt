@@ -10,6 +10,7 @@ with 'Catmandu::Importer';
 has bags              => (is => 'ro' , default => sub { [] } );
 has include_manifests => (is => 'ro' , default => sub { undef });
 has include_payloads  => (is => 'ro' , default => sub { undef });
+has verify            => (is => 'ro' , default => sub { undef }); 
 
 sub generator {
     my ($self) = @_;
@@ -36,6 +37,18 @@ sub read_bag {
         base              => $dir ,
         version           => $bag->version ,
     };
+
+    if ($self->verify) {
+        eval {
+            $bag->verify_bag;
+        };
+        if ($@) {
+            $item->{is_valid} = 0;
+        }
+        else {
+            $item->{is_valid} = 1;
+        }
+    }
 
     my $tags = $self->read_tagfile("$dir/bag-info.txt");
     $item->{tags} = $tags;

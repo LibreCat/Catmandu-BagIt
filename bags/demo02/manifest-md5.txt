@@ -1,4 +1,4 @@
-09ee4a61115a64a8d6f59de2b73b7a02  data/Changes
+19ee4a61115a64a8d6f59de2b73b7a02  data/Changes
 cda2400bb43f14975f5b12c28057c77b  data/LICENSE
 c0fc24f604f71a7aeb2cda43471d475e  data/META.json
 73740906668df08e085c8303ed1ff25e  data/dist.ini
