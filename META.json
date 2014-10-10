@@ -1,5 +1,5 @@
 {
-   "abstract" : "Blah blah blah",
+   "abstract" : "Catmandu modules for working with BagIt packages.",
    "author" : [
       "Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>"
    ],

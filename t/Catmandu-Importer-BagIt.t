@@ -9,17 +9,17 @@ use Data::Dumper;
 
 my $pkg;
 BEGIN {
-	$pkg = 'Catmandu::Importer::BagIt';
-	use_ok $pkg;
+    $pkg = 'Catmandu::Importer::BagIt';
+    use_ok $pkg;
 }
 require_ok $pkg;
 
 my $importer = $pkg->new(
-						bags => ['bags/demo01','bags/demo02'] , 
-						verify => 1 , 
-						include_payloads => 1 ,
-						include_manifests => 1
-						);
+    bags => ['bags/demo01','bags/demo02'] , 
+    verify => 1 , 
+    include_payloads => 1 ,
+    include_manifests => 1
+);
 
 isa_ok $importer, $pkg;
 

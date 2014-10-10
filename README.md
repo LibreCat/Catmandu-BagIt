@@ -1,26 +1,25 @@
 # NAME
 
-Catmandu::BagIt - Blah blah blah
-
-# SYNOPSIS
-
-    use Catmandu::BagIt;
+Catmandu::BagIt - Catmandu modules for working with BagIt packages.
 
 # DESCRIPTION
 
-Catmandu::BagIt is
+Catmandu::BagIt provides methods to work with BagIt packages within the [Catmandu](https://metacpan.org/pod/Catmandu)
+framework. See [Catmandu::Introduction](https://metacpan.org/pod/Catmandu::Introduction) and [http://librecat.org/](http://librecat.org/) for an
+introduction into Catmandu.
+
+# CATMANDU MODULES
+
+- [Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt)
+- [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt)
 
 # AUTHOR
 
 Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
 
-# COPYRIGHT
+# COPYRIGHT AND LICENSE
 
-Copyright 2014- Patrick Hochstenbach
+This software is copyright (c) 2014 by Patrick Hochstenbach.
 
-# LICENSE
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-# SEE ALSO
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
