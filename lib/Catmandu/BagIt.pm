@@ -10,29 +10,34 @@ __END__
 
 =head1 NAME
 
-Catmandu::BagIt - Blah blah blah
+Catmandu::BagIt - Catmandu modules for working with BagIt packages.
 
-=head1 SYNOPSIS
-
-  use Catmandu::BagIt;
 
 =head1 DESCRIPTION
 
-Catmandu::BagIt is
+Catmandu::BagIt provides methods to work with BagIt packages within the L<Catmandu>
+framework. See L<Catmandu::Introduction> and L<http://librecat.org/> for an
+introduction into Catmandu.
+
+=head1 CATMANDU MODULES
+
+=over
+
+=item * L<Catmandu::Importer::BagIt>
+
+=item * L<Catmandu::Exporter::BagIt>
+
+=back
 
 =head1 AUTHOR
 
-Patrick Hochstenbach E<lt>Patrick.Hochstenbach@UGent.beE<gt>
+Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-Copyright 2014- Patrick Hochstenbach
+This software is copyright (c) 2014 by Patrick Hochstenbach.
 
-=head1 LICENSE
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=head1 SEE ALSO
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

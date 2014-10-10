@@ -11,7 +11,7 @@ Catmandu::Importer::BagIt - Package that imports BagIt data
    my $importer = Catmandu::Importer::BagIt->new(
                         bags => "/my/bags/*" ,
                   );
-                  
+
    my $importer = Catmandu::Importer::BagIt->new(
                         bags => ["directory1","directory2"] ,
                         include_manifests => 0 ,
@@ -107,7 +107,7 @@ Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Patrick Hochstenbach.
+This software is copyright (c) 2014 by Patrick Hochstenbach.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
