@@ -13,4 +13,14 @@ BEGIN {
 }
 require_ok $pkg;
 
-done_testing 2;
+my $exporter = $pkg->new();
+
+isa_ok $exporter, $pkg;
+
+throws_ok {
+	$exporter->add({
+		_id => 'bags/demo01'
+	});
+} 'Catmandu::Error' , qq|caught an error|;
+
+done_testing 4;

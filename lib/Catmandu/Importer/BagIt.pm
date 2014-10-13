@@ -36,7 +36,6 @@ and one or more fields:
 
     {
           '_id' => 'bags/demo01',
-          'base' => 'bags/demo01',
           'version' => '0.97',
           'tags' => {
                       'Bagging-Date' => '2014-10-03',
@@ -158,7 +157,6 @@ sub read_bag {
 
     my $item = { 
         _id               => $dir ,
-        base              => $dir ,
         version           => $bag->version ,
     };
 
