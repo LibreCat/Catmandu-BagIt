@@ -44,7 +44,9 @@ is $first->{tags}->{'Foo'} , 'Bar' , 'a Foo is a Bar';
 
 is $first->{is_valid} , 1 , 'the bag is valid';
 
-done_testing 10;
+ok $first->{version} , 'checking version bug';
+
+done_testing 11;
  
 END {
 	my $error = [];

@@ -47,6 +47,11 @@ be configured with the following parameters:
 
 Optional. Throws an Catmandu::Error when the exporter tries to overwrite an existing directory.
 
+=item skip_manifest
+
+Optional. Skips the re-calculation of MD5 manifest checksums in case BagIt directories get overwritten. Use this
+option for instance when overwriting only the tags of a bag.
+
 =back
 
 =head1 SEE ALSO
@@ -75,7 +80,8 @@ use Moo;
 
 with 'Catmandu::Exporter';
 
-has overwrite => (is => 'ro' , default => sub { 0 });
+has overwrite     => (is => 'ro' , default => sub { 0 });
+has skip_manifest => (is => 'ro' , default => sub { 0 });
 
 sub add {
 	my ($self, $data) = @_;
@@ -83,15 +89,23 @@ sub add {
 
 	Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
-    my $bag = $self->write_bag($directory);
+    my ($bag,$isnew) = $self->write_bag($directory);
 
     if (exists $data->{tags}) {
         my $tags = $data->{tags};
         delete $tags->{'Bagging-Date'};
         delete $tags->{'Bag-Software-Agent'};
         $bag->_write_baginfo($directory,%$tags);
-        $bag->_tagmanifest_md5($directory);
+       
     }
+
+    if ($isnew) {}
+    elsif ($self->skip_manifest) {}
+    else {
+        $bag->_manifest_md5($directory);
+    }
+
+    $bag->_tagmanifest_md5($directory);
 
     1;
 }
@@ -99,24 +113,29 @@ sub add {
 sub write_bag {
 	my ($self,$directory) = @_;
 
+    my $isnew = 1;
 	my $bag;
 
 	# If the directory contains a bagit.txt file we assume it is already a bag
 	if (-d $directory && -d $directory . "bagit.txt") {
     	$bag = Archive::BagIt->new($directory);
+        $isnew = 0;
     }
     elsif (-d $directory) {
     	$bag = Archive::BagIt->make_bag($directory);
+        $isnew = 0;
     }
     else {
     	make_path($directory, { error => \my $err });
 
-    	Catmandu::->throw("$directory creation failed") if @$err;
+    	Catmandu::Error->throw("$directory creation failed") if @$err;
     	 
     	$bag = Archive::BagIt->make_bag($directory);
+
+        $isnew = 1;
     }
 
-    $bag;
+    ($bag,$isnew);
 }
 
 sub commit { 1 }
