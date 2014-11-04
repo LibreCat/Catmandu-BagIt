@@ -50,6 +50,6 @@ END {
 	my $error = [];
 	# Stupid chdir trick to make remove_tree work
 	chdir("lib");
-	remove_tree('../bags/demo03', { verbose => 1, error => \$error });
+	remove_tree('../bags/demo03', { error => \$error });
 	print STDERR join("\n",@$error) , "\n" if @$error > 0;;
 };
