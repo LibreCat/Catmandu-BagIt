@@ -8,11 +8,12 @@ Catmandu::Exporter::BagIt - Package that exports data as BagIts
 
    use Catmandu::Exporter::BagIt
 
-   my $exporter = Catmandu::Exporter::BagIt->new(overwrite => 0);
+   my $exporter = Catmandu::Exporter::BagIt->new(
+                            overwrite     => 0 ,
+                            skip_manifest => 0,
+                  );
 
    $exporter->add($bagit_record);
-
-   $exporter->add({ _id => 'my/directory/bag01' });
 
    $exporter->commit;
 
@@ -30,7 +31,13 @@ and one or more fields:
                       'Payload-Oxum' => '92877.1'
                     },
            }, 
+           'fetch' => [
+               { 'http://server/download1.pdf'  => 'my_download1.pdf' } ,
+               { 'http://server2/download2.pdf' => 'my_download2,pdf' } ,
+           ],
     };
+
+All URL's in the fetch array will be mirrored and added to the bag.
 
 =head1 METHODS
 
@@ -76,6 +83,7 @@ use namespace::clean;
 use Catmandu::Sane;
 use Archive::BagIt;
 use File::Path qw(make_path remove_tree);
+use LWP::Simple;
 use Moo;
 
 with 'Catmandu::Exporter';
@@ -86,6 +94,7 @@ has skip_manifest => (is => 'ro' , default => sub { 0 });
 sub add {
 	my ($self, $data) = @_;
 	my $directory = $data->{_id};
+    $directory =~ s{\/$}{};
 
 	Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
@@ -97,6 +106,19 @@ sub add {
         delete $tags->{'Bag-Software-Agent'};
         $bag->_write_baginfo($directory,%$tags);
        
+    }
+
+    if (exists $data->{fetch}) {
+        for my $fetch (@{$data->{fetch}}) {
+            my ($url) = keys %$fetch;
+            my $file  = $fetch->{$url};
+
+            unless ((my $code = mirror($url,"$directory/data/$file")) == RC_OK) {
+                Catmandu::Error->throw("failed to mirror $url to $directory/data/$file : $code ");
+            }
+
+            $isnew = 0;
+        }
     }
 
     if ($isnew) {}

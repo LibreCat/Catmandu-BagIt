@@ -7,6 +7,7 @@ use Test::Exception;
 use Role::Tiny;
 use File::Path qw(remove_tree);
 use Catmandu::Importer::BagIt;
+use Data::Dumper;
 
 my $pkg;
 BEGIN {
@@ -26,13 +27,14 @@ throws_ok {
 } 'Catmandu::Error' , qq|caught an error|;
 
 ok $exporter->add({
-	_id  => 'bags/demo03' ,
-	tags => { 'Foo' => 'Bar' } ,
+	_id   => 'bags/demo03' ,
+	tags  => { 'Foo' => 'Bar' } ,
+	fetch => [ { 'http://lib.ugent.be' => 'ugent.txt'} ] ,
 }) , qq|created demo03 bag|;
 
 ok $exporter->commit;
 
-my $importer = Catmandu::Importer::BagIt->new( bags => ['bags/demo03'] , verify => 1);
+my $importer = Catmandu::Importer::BagIt->new( bags => ['bags/demo03'] , verify => 1 , include_manifests => 1);
 
 ok $importer , 'created importer';
 
@@ -46,7 +48,9 @@ is $first->{is_valid} , 1 , 'the bag is valid';
 
 ok $first->{version} , 'checking version bug';
 
-done_testing 11;
+ok exists $first->{manifest}->{'data/ugent.txt'} , 'found a manifest';
+
+done_testing 12;
  
 END {
 	my $error = [];
