@@ -29,7 +29,7 @@ throws_ok {
 ok $exporter->add({
 	_id   => 'bags/demo03' ,
 	tags  => { 'Foo' => 'Bar' } ,
-	fetch => [ { 'http://lib.ugent.be' => 'ugent.txt'} ] ,
+	fetch => [ { 'http://lib.ugent.be' => 'data/ugent.txt'} ] ,
 }) , qq|created demo03 bag|;
 
 ok $exporter->commit;

@@ -32,12 +32,13 @@ and one or more fields:
                     },
            }, 
            'fetch' => [
-               { 'http://server/download1.pdf'  => 'my_download1.pdf' } ,
-               { 'http://server2/download2.pdf' => 'my_download2,pdf' } ,
+               { 'http://server/download1.pdf'  => 'data/my_download1.pdf' } ,
+               { 'http://server2/download2.pdf' => 'data/my_download2.pdf' } ,
            ],
     };
 
-All URL's in the fetch array will be mirrored and added to the bag.
+All URL's in the fetch array will be mirrored and added to the bag. All payload files should
+be put in the 'data' subdirectory as shown in the example above.
 
 =head1 METHODS
 
@@ -113,8 +114,8 @@ sub add {
             my ($url) = keys %$fetch;
             my $file  = $fetch->{$url};
 
-            unless ((my $code = mirror($url,"$directory/data/$file")) == RC_OK) {
-                Catmandu::Error->throw("failed to mirror $url to $directory/data/$file : $code ");
+            unless ((my $code = mirror($url,"$directory/$file")) == RC_OK) {
+                Catmandu::Error->throw("failed to mirror $url to $directory/$file : $code ");
             }
 
             $isnew = 0;
