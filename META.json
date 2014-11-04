@@ -4,7 +4,7 @@
       "Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Milla version v1.0.5, Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.141520",
+   "generated_by" : "Dist::Milla version v1.0.5, Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.142690",
    "license" : [
       "perl_5"
    ],
@@ -36,8 +36,9 @@
       },
       "runtime" : {
          "requires" : {
-            "Archive::BagIt" : "0.046",
+            "Archive::BagIt" : "0.048",
             "Catmandu" : "0.9205",
+            "File::Path" : "2.09",
             "perl" : "5.008005"
          }
       },

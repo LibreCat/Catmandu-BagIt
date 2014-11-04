@@ -17,6 +17,16 @@ sub add {
 	Catmandu::BadArg->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
     my $bag = $self->write_bag($directory);
+
+    if (exists $data->{tags}) {
+        my $tags = $data->{tags};
+        delete $tags->{'Bagging-Date'};
+        delete $tags->{'Bag-Software-Agent'};
+        $bag->_write_baginfo($directory,%$tags);
+        $bag->_tagmanifest_md5($directory);
+    }
+
+    1;
 }
 
 sub write_bag {
@@ -41,5 +51,7 @@ sub write_bag {
 
     $bag;
 }
+
+sub commit { 1 }
 
 1;

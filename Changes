@@ -4,3 +4,4 @@ Revision history for Catmandu-BagIt
         - Initial release
         - Adding Catmandu::Importer skeleton
         - Adding Catmandu::Exporter skeleton
+        - Adding support for reading and writing bagits
