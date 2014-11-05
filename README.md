@@ -13,6 +13,10 @@ introduction into Catmandu.
 - [Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt)
 - [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt)
 
+# SEE ALSO
+
+[Archive::BagIt](https://metacpan.org/pod/Archive::BagIt)
+
 # AUTHOR
 
 Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>

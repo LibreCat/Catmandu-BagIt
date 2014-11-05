@@ -98,7 +98,8 @@ Be aware, changing the payload sections will be store new data on disk.
 =head1 SEE ALSO
 
 L<Catmandu>,
-L<Catmandu::Importer>
+L<Catmandu::Importer>,
+L<Archive::BagIt>
 
 =head1 AUTHOR
 

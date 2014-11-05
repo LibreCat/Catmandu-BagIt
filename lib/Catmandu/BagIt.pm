@@ -29,6 +29,10 @@ introduction into Catmandu.
 
 =back
 
+=head1 SEE ALSO
+
+L<Archive::BagIt>
+
 =head1 AUTHOR
 
 Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
