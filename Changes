@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.01  2014-12-03 10:02:20 CET
         - Initial release
         - Adding Catmandu::Importer skeleton
         - Adding Catmandu::Exporter skeleton
