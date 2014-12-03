@@ -1,7 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
-
+		- Adding an example how to download data from OAI repos into BagIt
+		
 0.01  2014-12-03 10:02:20 CET
         - Initial release
         - Adding Catmandu::Importer skeleton
