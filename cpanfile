@@ -9,5 +9,5 @@ on test => sub {
 };
 
 requires 'Catmandu','0.9205';
-requires 'Archive::BagIt','0.048';
+requires 'Archive::BagIt','0.052';
 requires 'File::Path','2.09';

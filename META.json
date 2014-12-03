@@ -36,7 +36,7 @@
       },
       "runtime" : {
          "requires" : {
-            "Archive::BagIt" : "0.048",
+            "Archive::BagIt" : "0.052",
             "Catmandu" : "0.9205",
             "File::Path" : "2.09",
             "perl" : "5.008005"

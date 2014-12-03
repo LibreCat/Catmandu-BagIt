@@ -106,7 +106,7 @@ sub add {
 
     return 1 if -d $directory && $self->ignore_existing;
 
-	Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
+	  Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
     my ($bag,$isnew) = $self->write_bag($directory);
 
@@ -149,23 +149,23 @@ sub write_bag {
     my ($self,$directory) = @_;
 
     my $isnew = 1;
-	my $bag;
+	  my $bag;
 
-	# If the directory contains a bagit.txt file we assume it is already a bag
-	if (-d $directory && -d $directory . "bagit.txt") {
-    	$bag = Archive::BagIt->new($directory);
+	  # If the directory contains a bagit.txt file we assume it is already a bag
+	  if (-d $directory && -d $directory . "bagit.txt") {
+        $bag = Archive::BagIt->new($directory);
         $isnew = 0;
     }
     elsif (-d $directory) {
-    	$bag = Archive::BagIt->make_bag($directory);
+    	  $bag = Archive::BagIt->make_bag($directory);
         $isnew = 0;
     }
     else {
-    	make_path($directory, { error => \my $err });
+    	  make_path($directory, { error => \my $err });
 
-    	Catmandu::Error->throw("$directory creation failed") if @$err;
+    	  Catmandu::Error->throw("$directory creation failed") if @$err;
     	 
-    	$bag = Archive::BagIt->make_bag($directory);
+    	  $bag = Archive::BagIt->make_bag($directory);
 
         $isnew = 1;
     }
