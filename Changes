@@ -1,7 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
-
+		- Adding required dependencies
+		
 0.03  2014-12-03 11:13:03 CET
         - Removing Perl code from the example bags which confuses CPAN
 
