@@ -8,6 +8,7 @@ on test => sub {
   requires 'Test::More', '1.001003';
 };
 
-requires 'Catmandu','0.9205';
+requires 'Catmandu','0.9209';
 requires 'Archive::BagIt','0.052';
+requires 'LWP::Simple','6.00';
 requires 'File::Path','2.09';

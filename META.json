@@ -4,7 +4,7 @@
       "Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 5.023, Dist::Milla version v1.0.5, CPAN::Meta::Converter version 2.142690",
+   "generated_by" : "Dist::Milla version v1.0.5, Dist::Zilla version 5.016, CPAN::Meta::Converter version 2.141170",
    "license" : [
       "perl_5"
    ],
@@ -37,8 +37,9 @@
       "runtime" : {
          "requires" : {
             "Archive::BagIt" : "0.052",
-            "Catmandu" : "0.9205",
+            "Catmandu" : "0.9209",
             "File::Path" : "2.09",
+            "LWP::Simple" : "6.00",
             "perl" : "5.008005"
          }
       },
@@ -62,6 +63,6 @@
          "web" : "https://github.com/LibreCat/Catmandu-BagIt"
       }
    },
-   "version" : "0.03"
+   "version" : "0.04"
 }
 
