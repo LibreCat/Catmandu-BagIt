@@ -7,3 +7,4 @@ MYMETA.*
 /.prove
 local
 cpanfile.snapshot
+test.pl

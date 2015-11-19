@@ -5,7 +5,6 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use Role::Tiny;
-use Data::Dumper;
 
 my $pkg;
 BEGIN {

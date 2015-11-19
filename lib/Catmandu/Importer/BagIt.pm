@@ -117,7 +117,7 @@ the same terms as the Perl 5 programming language system itself.
 use namespace::clean;
 use Catmandu::Sane;
 use Catmandu::Util qw(:is);
-use Archive::BagIt;
+use Catmandu::BagIt;
 use Moo;
 
 with 'Catmandu::Importer';
@@ -154,98 +154,43 @@ sub generator {
 
 sub read_bag {
     my ($self,$dir) = @_;
-    my $bag = Archive::BagIt->new($dir);
+    my $bagit = Catmandu::BagIt->new();
+
+    $bagit->read($dir);
 
     my $item = { 
         _id               => $dir ,
-        version           => $bag->version ,
+        version           => $bagit->version ,
     };
 
     if ($self->verify) {
-        eval {
-            $bag->verify_bag;
-        };
-        if ($@) {
-            $item->{is_valid} = 0;
-        }
-        else {
-            $item->{is_valid} = 1;
-        }
+        $item->{is_valid} = $bagit->valid ? 1 : 0;
     }
 
-    my $tags = $self->read_tagfile("$dir/bag-info.txt");
-    $item->{tags} = $tags;
+    for my $tag ($bagit->list_info_tags) {
+        my @values = $bagit->get_info($tag);
+        $item->{tags}->{$tag} = join "" , @values;
+    }
 
     if ($self->include_payloads) {
-        $item->{payload_files}     = [ map { substr($_,length($dir) + 1) } $bag->payload_files ];
-        $item->{non_payload_files} = [ map { substr($_,length($dir) + 1) } $bag->non_payload_files ];
+        $item->{payload_files}     = [ map { "data/" . $_->name } $bagit->list_files ];
+        $item->{non_payload_files} = [ $bagit->list_tagsum ];
     }
 
     if ($self->include_manifests) {
-        my %manifests = ();
-
-        if ($bag->manifest_files) {
-            for my $f ($bag->manifest_files) {
-                open(my $fh , '<' , $f);
-                while(<$fh>) {
-                    chomp;
-                    my ($sum,$file) = split(/\s+/,$_,2);
-                    $manifests{$file} = $sum; 
-                }
-                close($fh);
-            }
+        
+        for my $file ($bagit->list_tagsum) {
+            my $sum = $bagit->get_tagsum($file);
+            $item->{tagmanifest}->{$file} = $sum;
         }
 
-        my %tagmanifests = ();
-
-        if ($bag->tagmanifest_files) {
-            for my $f ($bag->tagmanifest_files) {
-                open(my $fh , '<' , $f);
-                while(<$fh>) {
-                    chomp;
-                    my ($sum,$file) = split(/\s+/,$_,2);
-                    $tagmanifests{$file} = $sum; 
-                }
-                close($fh);
-            }
+        for my $file ($bagit->list_checksum) {
+            my $sum = $bagit->get_checksum($file);
+            $item->{manifest}->{"data/$file"} = $sum;
         }
-
-        $item->{manifest}    = \%manifests;
-        $item->{tagmanifest} = \%tagmanifests;
     }
 
     $item;
-}
-
-sub read_tagfile {
-    my ($self,$file) = @_;
-
-    open(my $fh, '<:encoding(UTF-8)' , $file) || die "failed to open $file";
-    my %tags = ();
-    my $prev_tag = undef;
-
-    while(<$fh>) {
-        chomp;
-        my ($tag,$data);
-
-        if (/^(\S+)\s*:\s*(.*)/) {
-            $tag = $1;
-            $data = $2;
-        }
-        elsif (/^\s+/ && defined $prev_tag) {
-            $tag  = $prev_tag;
-            $data = $_;
-        }
-
-        if (defined $tag && defined $data) {
-            $tags{$tag} .= $data;
-        }
-
-        $prev_tag = $tag;
-    }
-    close($fh);
-
-    \%tags;
 }
 
 1;

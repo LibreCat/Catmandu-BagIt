@@ -9,6 +9,11 @@ on test => sub {
 };
 
 requires 'Catmandu','0.9209';
-requires 'Archive::BagIt','0.052';
 requires 'LWP::Simple','6.00';
+requires 'File::Slurper','0';
 requires 'File::Path','2.09';
+requires 'File::Copy','0';
+requires 'File::Path','0';
+
+recommends 'Log::Log4perl', '1.44';
+recommends 'Log::Any::Adapter::Log4perl', '0.06';
