@@ -90,6 +90,7 @@ use namespace::clean;
 use Catmandu::Sane;
 use Catmandu::BagIt;
 use File::Path qw(mkpath);
+use File::Temp qw(tempfile);
 use IO::File;
 use LWP::Simple;
 use Moo;
@@ -124,17 +125,18 @@ sub add {
 
             mkpath("$directory/data") unless -d "$directory/data";
 
+            my ($fh, $filename) = tempfile();
+
             # For now using a simplistic mirror operation
-            unless ((my $code = mirror($url,"$directory/$file")) == RC_OK) {
-                Catmandu::Error->throw("failed to mirror $url to $directory/$file : $code ");
+            unless ((my $code = mirror($url,$filename)) == RC_OK) {
+                Catmandu::Error->throw("failed to mirror $url to $filename : $code ");
             }
 
             $file =~ s{^data/}{};
-            $bagit->add_file($file,IO::File->new("$directory/data/$file"));
+            $bagit->add_file($file,IO::File->new($filename));
+            $bagit->write($directory, overwrite => 1);
         }
     }
-
-    $bagit->write($directory);
 
     1;
 }

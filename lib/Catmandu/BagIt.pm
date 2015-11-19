@@ -942,7 +942,14 @@ sub _write_data {
 
         if ($item->is_io) {
             $item->fh->seek(0,0) if $item->data->can('seek');
-            copy($item->fh, "$path/$name") || die "failed : $!";
+            eval {
+                copy($item->fh, "$path/$name");
+            };
+            if ($@) {
+                if ($@ =~ /are identical/) {
+                    $self->log->error("attempy to copy identical files");
+                }
+            }
             $item->fh->close;
             $item->flag($item->flag ^ FLAG_DIRTY);
         }

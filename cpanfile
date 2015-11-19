@@ -14,6 +14,7 @@ requires 'File::Slurper','0';
 requires 'File::Path','2.09';
 requires 'File::Copy','0';
 requires 'File::Path','0';
+requires 'File::Temp','0';
 
 recommends 'Log::Log4perl', '1.44';
 recommends 'Log::Any::Adapter::Log4perl', '0.06';
