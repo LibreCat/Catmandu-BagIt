@@ -221,7 +221,7 @@ sub write {
         remove_tree($path);
     }
 
-    if (-d $path) {
+    if (-d "$path/bagit.txt") {
         if ($opts{overwrite}) {
             $self->log->info("overwriting: $path");
         }
@@ -288,7 +288,8 @@ sub add_file {
 
     # Total size changes, therefore tag manifest changes
     $self->_update_info;
-    $self->_update_tag_manifest;
+    $self->_update_tag_manifest; # Try to update the manifest .. but it is dirty
+                                 # Until we serialize the bag
 
     $self->_dirty($self->dirty | FLAG_DATA | FLAG_MANIFEST | FLAG_BAG_INFO | FLAG_TAG_MANIFEST);
 
@@ -989,6 +990,10 @@ sub _write_fetch {
 
     return 1 unless $self->dirty & FLAG_FETCH;
 
+    my $fetch_str = $self->_fetch_as_string;
+
+    return 1 unless defined($fetch_str) && length($fetch_str);
+
     $self->log->info("writing the fetch file");
 
     if ($self->_fetch == 0) {
@@ -1005,7 +1010,7 @@ sub _write_fetch {
         return;
     }
 
-    print F $self->_fetch_as_string;
+    print F $fetch_str;
 
     close (F);
 
@@ -1052,11 +1057,14 @@ sub _write_manifest {
 
 sub _manifest_as_string {
     my $self = shift;
+    my $path = $self->path;
+
+    return undef unless defined $path;
 
     my $str = '';
 
     foreach my $file ($self->list_checksum) {
-        next unless -f "data/$file";
+        next unless -f "$path/data/$file";
         my $md5 = $self->get_checksum($file);
         $str .= "$md5 data/$file\n";
     }
@@ -1068,6 +1076,9 @@ sub _write_tag_manifest {
     my ($self,$path) = @_;
 
     return 1 unless $self->dirty & FLAG_TAG_MANIFEST;
+
+    # The tag manifest can be dirty when writing new files
+    $self->_update_tag_manifest;
 
     $self->log->info("writing the tag manifest file");
 
