@@ -51,7 +51,7 @@ has 'path' => (
 has 'version' => (
     is       => 'ro',
     writer   => '_version',
-    default  => '0.96',
+    default  => '0.97',
     init_arg => undef,
 );
 
@@ -169,11 +169,11 @@ sub get_checksum {
 }
 
 sub read {
-    my ($self,$path) = @_;
-
-    $self->_error([]);
+    my ($class,$path) = @_;
 
     die "usage: read(path)" unless $path;
+
+    my $self = $class->new;
 
     if (! -d $path ) {
         $self->log->error("$path doesn't exist");
@@ -197,7 +197,7 @@ sub read {
 
     $self->_dirty(0);
 
-    $ok == 7;
+    $ok == 7 ? $self : undef;
 }
 
 sub write {
@@ -379,15 +379,17 @@ sub add_info {
             unless defined($name) && defined($values);  
 
     if ($name =~ /^(Bag-Size|Bagging-Date|Payload-Oxum)$/) {
-        $self->log->error("adding info $name - is readonly");
-        return undef;
+        for my $part (@{$self->_info}) {
+            if ($part->[0] eq $name) {
+                $part->[1] = $values;
+                return;
+            }
+        }
+        push @{$self->_info} , [ $name , $values ];
+        return;
     }
 
     $self->log->info("adding info $name");
-
-    my (@old) = grep { $_->[0] ne $name} @{$self->_info};
-
-    $self->_info(\@old);
 
     if (ref($values) eq 'ARRAY') {
         foreach my $value (@$values) {
@@ -435,33 +437,39 @@ sub list_info_tags {
 }
 
 sub get_info {
-    my ($self,$field) = @_;
+    my ($self,$field,$join) = @_;
+    $join //= '; ';
 
-    die "usage: get_info(field)" unless $field;
+    die "usage: get_info(field[,$join])" unless $field;
 
     my @res = map { $_->[1] } grep { $_->[0] eq $field } @{$self->_info};
 
-    wantarray ? @res : join "; ", @res;
+    wantarray ? @res : join $join, @res;
 }
 
 sub size {
     my $self = shift;
+
+    if (my $size = $self->get_info('Bag-Size','')) {
+        return $size;
+    }
+
     my $total = $self->_size;
 
-    if ($total > 100*1024**3) {
+    if ($total > 100*1000**3) {
         # 100's of GB
-        sprintf "%-.3f TB" , $total/(1024**4);
+        sprintf "%-.3f TB" , $total/(1000**4);
     }
     elsif ($total > 100*1024**2) {
         # 100's of MB
-        sprintf "%-.3f GB" , $total/(1024**3);
+        sprintf "%-.3f GB" , $total/(1000**3);
     }
     elsif ($total > 100*1024) {
         # 100's of KB
-        sprintf "%-.3f MB" , $total/(1024**2);
+        sprintf "%-.3f MB" , $total/(1000**2);
     }
     else {
-        sprintf "%-.3f KB" , $total/1024;
+        sprintf "%-.3f KB" , $total/1000;
     }
 }
 
@@ -529,7 +537,7 @@ sub valid {
         # bag to be serialized somewhere before we start our validation process
         unless (defined $path && -d $path) {
             $self->log->error("sorry, only serialized (write) bags allowed when validating");
-            return (0,"sorry, only serialized (write) bags allowed when validating");
+            return (1,"sorry, only serialized (write) bags allowed when validating");
         }
 
         my $md5 = $tag == 0 ? $self->get_checksum($file) : $self->get_tagsum($file);
@@ -616,9 +624,9 @@ sub _update_info {
     $self->log->debug("updating the default info");
 
     # Add some goodies to the info file...
-    $self->add_info('Payload-Oxum',$self->payload_oxum);
-    $self->add_info('Bag-Size',$self->size);
     $self->add_info('Bagging-Date', strftime "%Y-%m-%d", gmtime);
+    $self->add_info('Bag-Size',$self->size);
+    $self->add_info('Payload-Oxum',$self->payload_oxum);
 }
 
 sub _update_tag_manifest {
@@ -1117,7 +1125,10 @@ sub _md5_sum {
 
     my $ctx = Digest::MD5->new;
 
-    if (! ref $data) {
+    if (!defined $data) {
+    return $ctx->add(Encode::encode_utf8(''))->hexdigest;
+    }
+    elsif (! ref $data) {
         return $ctx->add(Encode::encode_utf8($data))->hexdigest;
     }
     elsif (ref $data eq 'SCALAR') {
@@ -1150,9 +1161,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
     use Catmandu::BagIt;
 
-    my $bagit = Catmandu::Bagit->new;
+    # Assemble a new bag
+    my $bagit = Catmandu::BagIt->new;
 
-    # Read operations
+    # Read an existing
+    my $bagit = Catmanu::BagIt->read($directory);
 
     $bag->read('t/bag');
 
@@ -1176,7 +1189,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
     printf "file-sums:\n";
     for my $file ($bagit->list_checksum) {
-        my $sum = $bagit->get_tagsum($file);
+        my $sum = $bagit->get_checksum($file);
         printf " $file: %s\n" , $sum; 
     }
 

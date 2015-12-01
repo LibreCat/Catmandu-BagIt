@@ -1,8 +1,13 @@
+#!/usr/bin/env perl
+
 use strict;
 use Test::More;
-use Catmandu::BagIt;
 
-# replace with the actual test
-ok 1;
+my $pkg;
+BEGIN {
+	$pkg = 'Catmandu::BagIt';
+	use_ok $pkg;
+};
+require_ok $pkg;
 
 done_testing;

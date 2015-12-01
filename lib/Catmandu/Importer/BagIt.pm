@@ -154,9 +154,7 @@ sub generator {
 
 sub read_bag {
     my ($self,$dir) = @_;
-    my $bagit = Catmandu::BagIt->new();
-
-    $bagit->read($dir);
+    my $bagit = Catmandu::BagIt->read($dir);
 
     my $item = { 
         _id               => $dir ,

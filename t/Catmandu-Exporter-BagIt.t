@@ -7,7 +7,6 @@ use Test::Exception;
 use Role::Tiny;
 use File::Path qw(remove_tree);
 use Catmandu::Importer::BagIt;
-use Data::Dumper;
 
 my $pkg;
 BEGIN {
