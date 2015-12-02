@@ -137,6 +137,16 @@ sub get_file {
     return undef;
 }
 
+sub is_dirty {
+    my ($self) = @_;
+    $self->dirty != 0;
+}
+
+sub is_holey {
+    my ($self) = @_;
+    @{$self->_fetch} > 0;
+}
+
 sub list_fetch {
     my ($self) = @_;
     @{$self->_fetch};
@@ -259,16 +269,19 @@ sub add_file {
     die "usage: add_file(name, data [, overwrite => 1])" 
             unless defined($name) && defined($data);
 
-    die "illegal file name $name"
-            unless $self->_is_legal_file_name($name);
+    $self->_error([]);
+
+    unless ($self->_is_legal_file_name($name)) {
+        $self->log->error("illegal file name $name");
+        $self->_push_error("illegal file name $name");
+        return;
+    }
 
     $self->log->info("adding file $name");
 
     if ($opts{overwrite}) {
         $self->remove_file($name);
     }
-
-    $self->_error([]);
 
     if ($self->get_checksum("$name")) {
         $self->log->error("$name already exists in bag");
@@ -343,11 +356,11 @@ sub add_fetch {
 
     $self->log->info("adding fetch $url -> $filename");
 
-    my (@old) = grep { $_->{filename} ne "data/$filename"} @{$self->_fetch};
+    my (@old) = grep { $_->{filename} ne $filename} @{$self->_fetch};
 
     $self->_fetch(\@old);
 
-    push @{$self->_fetch} , Catmandu::BagIt::Fetch->new(url => $url , size => $size , filename => "data/$filename");
+    push @{$self->_fetch} , Catmandu::BagIt::Fetch->new(url => $url , size => $size , filename => $filename);
 
     $self->_update_tag_manifest;
 
@@ -363,7 +376,7 @@ sub remove_fetch {
 
     $self->log->info("removing fetch for $filename");
 
-    my (@old) = grep { $_->filename ne "data/$filename"} @{$self->_fetch};
+    my (@old) = grep { $_->filename ne $filename} @{$self->_fetch};
 
     $self->_fetch(\@old);
 
@@ -450,10 +463,6 @@ sub get_info {
 sub size {
     my $self = shift;
 
-    if (my $size = $self->get_info('Bag-Size','')) {
-        return $size;
-    }
-
     my $total = $self->_size;
 
     if ($total > 100*1000**3) {
@@ -521,7 +530,7 @@ sub complete {
         }
     }
 
-    $self->errors == 0;
+    $self->errors == 0 && @missing == 0;
 }
 
 sub valid {
@@ -798,7 +807,7 @@ sub _read_info {
     }
 
     foreach my $line (read_lines($info_file, 'UTF-8')) {
-    $line =~ s/\r\n$/\n/g;
+        $line =~ s/\r\n$/\n/g;
         chomp($line);
 
         if ($line =~ /^\s+/) {
@@ -1142,7 +1151,7 @@ sub _md5_sum {
 sub _is_legal_file_name {
     my ($self, $name) = @_;
 
-    return 0 unless ($name =~ /^[[:alnum:].-_]+/);
+    return 0 unless ($name =~ /^[[:alnum:].-_]+$/);
     return 0 if ($name =~ m{(^\.|\/\.+\/)});
     return 1;
 }
@@ -1187,12 +1196,14 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
         printf " $file: %s\n" , $sum; 
     }
 
+    # Read the file listing as found in the manifest file
     printf "file-sums:\n";
     for my $file ($bagit->list_checksum) {
         my $sum = $bagit->get_checksum($file);
         printf " $file: %s\n" , $sum; 
     }
 
+    # Read the real listing of files as found on the disk
     printf "files:\n";
     for my $file ($bagit->list_files) {
         my $stat = [$file->data->stat];
@@ -1208,7 +1219,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
        ....
     }
 
-    printf "dirty: %s\n" , $bagit->dirty;
+    print "dirty?\n" if $bagit->is_dirty;
 
     if ($bagit->complete) {
         print "bag is complete\n";
@@ -1222,6 +1233,13 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     }
     else {
         print "bag is not valid!\n";
+    }
+
+    if ($bagit->is_holey) {
+        print "bag is holey\n";
+    }
+    else {
+        print "bag isn't holey\n";
     }
 
     if ($bagit->errors) {
