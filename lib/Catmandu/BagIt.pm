@@ -984,7 +984,10 @@ sub _write_data {
                     $self->log->error("attempy to copy identical files");
                 }
             }
-            $item->fh->close;
+            # Close the old handle
+            $item->fh->close();
+            # Reopen the file at the new position
+            $item->{data} = IO::File->new("$path/$name");
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
         else {
@@ -1174,6 +1177,17 @@ sub _is_legal_file_name {
     return 0 unless ($name =~ /^[[:alnum:].-_]+$/);
     return 0 if ($name =~ m{(^\.|\/\.+\/)});
     return 1;
+}
+
+sub DESTROY {
+    my ($self) = @_;
+
+    # Closing open file handles
+    foreach my $item ($self->list_files) {
+        if ($item->is_io && $item->fh->opened) {
+            $item->fh->close;
+        }
+    }
 }
 
 1;

@@ -384,6 +384,18 @@ note("update bag");
 
     ok $bagit->complete , 'bag is now complete';
 
+    my $fh = IO::File->new("LICENSE");
+
+    ok $bagit->add_file("LICENSE",$fh) , 'add_file(IO::File)';
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    ok !$fh->opened , 'file handle open closed';
+
+    ok -f "t/my-bag/data/LICENSE" , 'got a t/my-bag/data/LICENSE';
+
+    like read_text("t/my-bag/data/LICENSE") , qr/This software is copyright/ , 'file content is correct';
+
     remove_path("t/my-bag");
 }
 
