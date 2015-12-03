@@ -31,6 +31,7 @@ note("basic metadata");
     is $bagit->encoding , 'UTF-8' , 'encoding';
     is $bagit->size , '0.000 KB' , 'size';
     is $bagit->payload_oxum , '0.0' , 'payload_oxum';
+    ok $bagit->dirty , 'bag is dirty';
 }
 
 note("info");
@@ -159,6 +160,14 @@ note("fetch");
     is $fetches[0]->url  , 'http://www.gutenberg.org/cache/epub/1980/pg1980.txt' , 'fetch->url';
     is $fetches[0]->size , 290000 , 'fetch->size';
     is $fetches[0]->filename , 'shortstories.txt' , 'fetch->filename';
+
+    ok $bagit->remove_fetch('shortstories.txt') , 'remove_fetch';
+
+    @fetches = $bagit->list_fetch;
+
+    ok @fetches == 0 , 'list_fetch';
+
+    ok $bagit->is_dirty , 'bag is still dirty'; 
 }
 
 note("complete & valid");
@@ -166,11 +175,13 @@ note("complete & valid");
     my $bagit = Catmandu::BagIt->new;
     ok $bagit , 'new';
 
+    ok $bagit->dirty , 'dirty';
+
     ok $bagit->complete , 'complete';
 
-    ok $bagit->valid , 'valid';
+    ok !$bagit->valid , 'valid';
 
-    ok !$bagit->errors , 'no errors';
+    ok $bagit->errors , 'valid has errors (we need to serialize first)';
 }
 
 note("reading operations demo01 (valid bag)");
@@ -283,4 +294,39 @@ note("reading operations demo03 (holey bag)");
     is $fetches[0]->filename , 'rfc1.txt' , 'fetch->filename';
 }
 
+note("write to disk");
+{
+    my $bagit = Catmandu::BagIt->new;
+    ok $bagit , 'new';
+
+    ok $bagit->is_dirty, 'bag is dirty';
+    ok $bagit->write("t/my-bag") , 'write(t/my-bag)'; 
+    ok $bagit->complete, 'bag is now complete';
+    ok $bagit->valid , 'bag is now valid';
+    ok !$bagit->is_dirty , 'bag is not dirty anymore';
+
+    ok -d "t/my-bag" , "got a t/my-bag directory";
+    ok -d "t/my-bag/data" , "got a t/my-bag/data directory";
+    ok -f "t/my-bag/bagit.txt" , "got a t/my-bag/bagit.txt";
+    ok -f "t/my-bag/bag-info.txt" , "got a t/my-bag/bag-info.txt";
+    ok -f "t/my-bag/manifest-md5.txt" , "got a t/my-bag/manifest-md5.txt";
+    ok -f "t/my-bag/tag-manifest-md5.txt" , "got a t/my-bag/tag-manifest-md5.txt";
+
+    my $bagit2 = Catmandu::BagIt->new;
+    $bagit2->add_info('Test',123);
+
+    ok ! $bagit2->write("t/my-bag") , 'failed to overwrite existing bag';
+
+    remove_path("t/my-bag");
+}
+
 done_testing;
+
+sub remove_path {
+    my $path = shift;
+    # Stupid chdir trick to make remove_tree work
+    chdir("lib");
+    if (-d "../$path") {
+       remove_tree("../$path");
+    }
+}

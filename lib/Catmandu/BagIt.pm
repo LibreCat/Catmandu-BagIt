@@ -110,6 +110,9 @@ sub BUILD {
             bag-info.txt
             manifest-md5.txt
             )]);
+
+
+    $self->_dirty($self->dirty | FLAG_BAG_INFO | FLAG_TAG_MANIFEST | FLAG_DATA | FLAG_BAGIT);
 }
 
 sub errors {
@@ -231,7 +234,7 @@ sub write {
         remove_tree($path);
     }
 
-    if (-d "$path/bagit.txt") {
+    if (-f "$path/bagit.txt") {
         if ($opts{overwrite}) {
             $self->log->info("overwriting: $path");
         }
@@ -260,7 +263,7 @@ sub write {
 
     $self->_dirty(0);
 
-    $ok == 5;
+    $ok == 6;
 }
 
 sub add_file {
