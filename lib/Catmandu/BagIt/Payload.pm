@@ -2,8 +2,8 @@ package Catmandu::BagIt::Payload;
 use Moo;
 use IO::String;
 
-has 'name' => (is => 'rw');
-has 'data' => (is => 'rw');
+has 'name' => (is => 'ro');
+has 'data' => (is => 'ro');
 has 'flag' => (is => 'rw', default => 0);
 
 sub is_io {

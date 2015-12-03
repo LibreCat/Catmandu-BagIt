@@ -3,9 +3,9 @@ use Moo;
 use IO::String;
 use File::Slurp;
 
-has 'url'      => (is => 'rw');
-has 'size'     => (is => 'rw');
-has 'filename' => (is => 'rw');
+has 'url'      => (is => 'ro');
+has 'size'     => (is => 'ro');
+has 'filename' => (is => 'ro');
 
 1;
 

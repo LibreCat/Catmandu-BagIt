@@ -396,8 +396,17 @@ note("update bag");
 
     like read_text("t/my-bag/data/LICENSE") , qr/This software is copyright/ , 'file content is correct';
 
+    ok $bagit->add_file("LICENSE",IO::File->new("cpanfile"), overwrite => 1) , 'setting new file content';
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+    
+    like read_text("t/my-bag/data/LICENSE") , qr/requires 'perl'/ , 'file content is correct';
+
     remove_path("t/my-bag");
 }
+
+#TODO - Add tests for changing the Bag-Size and Payload-Oxum when adding a fetch 
+# file?
 
 done_testing;
 
