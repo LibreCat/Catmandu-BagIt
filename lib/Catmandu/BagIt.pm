@@ -228,8 +228,11 @@ sub write {
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
     }
-
-    if ($opts{new}) {
+    elsif (defined($self->path) && $path eq $self->path) {
+        # we are ok the path exists and don't need to remove anything
+        # updates are possible when overwrite => 1
+    }
+    elsif ($opts{overwrite}) {
         $self->log->info("removing: $path");
         remove_tree($path);
     }
@@ -365,6 +368,7 @@ sub add_fetch {
 
     push @{$self->_fetch} , Catmandu::BagIt::Fetch->new(url => $url , size => $size , filename => $filename);
 
+    $self->_update_info;
     $self->_update_tag_manifest;
 
     $self->_dirty($self->dirty | FLAG_FETCH | FLAG_TAG_MANIFEST);
@@ -382,6 +386,9 @@ sub remove_fetch {
     my (@old) = grep { $_->filename ne $filename} @{$self->_fetch};
 
     $self->_fetch(\@old);
+
+    $self->_update_info;
+    $self->_update_tag_manifest;
 
     $self->_dirty($self->dirty | FLAG_FETCH | FLAG_TAG_MANIFEST);
 
@@ -533,7 +540,9 @@ sub complete {
         }
     }
 
-    $self->errors == 0 && @missing == 0;
+    my $has_fetch = $self->list_fetch > 0 ? 1 : 0;
+
+    $self->errors == 0 && @missing == 0 && $has_fetch == 0;
 }
 
 sub valid {
@@ -669,6 +678,11 @@ sub _update_tag_manifest {
             push @{$self->_tags} , 'fetch.txt';
         }
     }
+    else {
+        my (@new) = grep { $_ ne 'fetch.txt' } @{$self->_tags};
+        $self->_tags(\@new);
+        delete $self->_tag_sums->{'fetch.txt'};
+    }
 }
 
 sub _read_fetch {
@@ -714,7 +728,6 @@ sub _read_tag_manifest {
 
     1;
 }
-
 
 sub _read_manifest {
     my ($self, $path) = @_;
@@ -1012,7 +1025,11 @@ sub _write_fetch {
 
     my $fetch_str = $self->_fetch_as_string;
 
-    return 1 unless defined($fetch_str) && length($fetch_str);
+    unless (defined($fetch_str) && length($fetch_str)) {
+        $self->log->info("removing fetch.txt");
+        unlink "$path/fetch.txt" if -f "$path/fetch.txt";
+        return 1;
+    }
 
     $self->log->info("writing the fetch file");
 

@@ -8,9 +8,14 @@ use Digest::MD5;
 use IO::File;
 use POSIX qw(strftime);
 use File::Path qw(remove_tree);
+use File::Slurper 'read_text';
 use utf8;
 
 use Data::Dumper;
+#use Log::Log4perl;
+#use Log::Any::Adapter;
+#Log::Log4perl::init('log4perl.conf');
+#Log::Any::Adapter->set('Log4perl');
 
 my $pkg;
 BEGIN {
@@ -316,6 +321,68 @@ note("write to disk");
     $bagit2->add_info('Test',123);
 
     ok ! $bagit2->write("t/my-bag") , 'failed to overwrite existing bag';
+    
+    ok $bagit2->is_dirty, 'bag is dirty';
+
+    ok $bagit2->write("t/my-bag", overwrite => 1) , 'write with overwrite';
+
+    ok ! $bagit->is_dirty, 'bag is not dirty anymore';
+
+    my $bagit3 = Catmandu::BagIt->read("t/my-bag");
+
+    ok $bagit3 , 'read';
+
+    ok $bagit3->write("t/my-bag2") , 'create a copy';
+    ok $bagit3->complete , 'copy is complete';
+    ok $bagit3->valid , 'copy is valid';
+    ok !$bagit3->is_dirty , 'bag is not dirty';
+
+    remove_path("t/my-bag");
+    remove_path("t/my-bag2");
+}
+
+note("update bag");
+{
+    my $bagit = Catmandu::BagIt->new;
+
+    $bagit->add_info("Test",123);
+    $bagit->add_file("test.txt","test123");
+    $bagit->add_fetch("http://my.org/data.txt",1024,"data.txt");
+
+    ok $bagit->is_dirty , 'bag is dirty';
+    ok $bagit->write("t/my-bag") , 'write bag';
+
+    ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
+    ok -f "t/my-bag/fetch.txt" , 'got a t/my-bag/fetch.txt';
+
+    ok $bagit->valid , 'bag is now valid';
+    ok !$bagit->is_dirty , 'bag is not dirty anymore';
+    ok !$bagit->complete , 'bag is not complete';
+
+    ok $bagit->remove_fetch("data.txt"), 'remove_fetch';
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
+    ok ! -f "t/my-bag/fetch.txt" , 'removed the t/my-bag/fetch.txt';
+
+    ok $bagit->complete , 'bag is now complete';
+
+    ok $bagit->add_file("test.txt","test456", overwrite => 1) , 'overwrite file';
+    ok $bagit->is_dirty , 'bag is dirty';
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    is read_text("t/my-bag/data/test.txt") , "test456" , "file content is correctly updated";
+
+    ok $bagit->remove_file("test.txt") , 'remove_file';
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    ok ! -f "t/my-bag/data/test.txt" , 'removed t/my-bag/data/test.txt';
+
+    ok ! $bagit->is_dirty , 'bag is dirty';
+
+    ok $bagit->complete , 'bag is now complete';
 
     remove_path("t/my-bag");
 }
@@ -329,4 +396,5 @@ sub remove_path {
     if (-d "../$path") {
        remove_tree("../$path");
     }
+    chdir("..");
 }
