@@ -1,7 +1,10 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
-
+        - Creating a Catmandu::BagIt implementation of the BagIt spec
+        - Adding support for bag updates
+        - Adding correct handling of fetch files
+        
 0.04  2014-12-05 14:10:47 CET
 		- Adding required dependencies
 		
