@@ -1315,6 +1315,131 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
 =back
 
+=head1 METHODS
+
+=head2 new()
+
+Create a new BagIt object
+
+=head2 read($directory)
+
+Open an exiting BagIt object
+
+=head2 write($directory, [%options])
+
+Write a BagIt to disk. Options: new => 1 recreate the bag when it already existed, overwrite => 1 overwrite
+and existing bag (updating the changed tags/files);
+
+=head2 path()
+
+Return the path to the BagIt.
+
+=head2 version()
+
+Return the version of the BagIt.
+
+=head2 encoding()
+
+Return the encoding of the BagIt.
+
+=head2 size()
+
+Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus 
+the files that need to be fetched from the network).
+
+=head2 paypayload_oxum()
+
+Return the actual payload oxum of files found in the package.
+
+=head2 is_dirty()
+
+Return true when the BagIt contains changes not yet written to disk.
+
+=head2 is_holey()
+
+Return true when the BagIt contains a non emtpy fetch configuration.
+
+=head2 is_error()
+
+Return an ARRAY of errors when checking complete, valid and write. 
+
+=head2 complete()
+
+Return true when the BagIt is complete (all files and manifest files are consistent).
+
+=head2 valid()
+
+Returns true when the BagIt is complete and all checkums match the files on disk.
+
+=head2 list_info_tags()
+
+Return an ARRAY of tag names found in bagit-info.txt.
+
+=head2 add_info($tag,$value)
+
+=head2 add_info($tag,[$values])
+
+Add an info $tag with a $value.
+
+=head2 remove_info($tag)
+
+Remove an info $tag.
+
+=head2 get_info($tag, [$delim])
+
+Return an ARRAY of values found for the $tag name. Or, in scalar context, return a string of 
+all values optionally delimeted by $delim.
+
+=head2 list_tagsum()
+
+Return a ARRAY of all checkums of tag files.
+
+=head2 get_tagsum($filename)
+
+Return the checksum of the tag file $filename.
+
+=head2 list_checksum()
+
+Return an ARRAY of files found in the manifest file.
+
+=head2 get_checksum($filename)
+
+Return the checksum of the file $filname.
+
+=head2 list_files()
+
+Return an ARRAY of real payload files found on disk as Catmandu::BagIt::Payload.
+
+=head2 get_file($filename)
+
+Get a Catmandu::BagIt::Payload object for the file $filename.
+
+=head2 add_file($filename, $string)
+
+=head2 add_file($filename, IO::File->new(...))
+
+Add a new file to the BagIt.
+
+=head2 remove_file($filename)
+
+Remove a file from the BagIt.
+
+=head2 list_fetch()
+
+Return an ARRAY of fetch payloads as Catmandu::BagIt::Fetch.
+
+=head2 get_fetch($filename)
+
+Get a Catmandu::BagIt::Fetch object for the file $filename.
+
+=head2 add_fetch($url,$size,$filename)
+
+Add a fetch entry to the BagIt.
+
+=head2 remove_fetch($filename)
+
+Remove a fetch entry from the BagIt.
+
 =head1 SEE ALSO
 
 L<Catmandu::Importer::BagIt> , L<Catmandu::Exporter::BagIt>
@@ -1325,7 +1450,7 @@ Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Patrick Hochstenbach.
+This software is copyright (c) 2015 by Patrick Hochstenbach.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
