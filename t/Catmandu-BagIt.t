@@ -11,7 +11,7 @@ use File::Path qw(remove_tree);
 use File::Slurper 'read_text';
 use utf8;
 
-use Data::Dumper;
+#use Data::Dumper;
 #use Log::Log4perl;
 #use Log::Any::Adapter;
 #Log::Log4perl::init('log4perl.conf');
