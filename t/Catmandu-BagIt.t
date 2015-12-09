@@ -284,9 +284,9 @@ note("reading operations demo03 (holey bag)");
     my $bagit = Catmandu::BagIt->read("bags/demo03");
     ok $bagit , 'read(bags/demo03)';
     ok !$bagit->complete , 'bag is not complete';
-    ok !$bagit->valid , 'bag is not valid';
+    ok $bagit->valid , 'bag is not valid';
     ok !$bagit->is_dirty , 'bag is not dirty';
-    ok $bagit->errors , 'bag contains errors'; 
+    ok !$bagit->errors , 'bag contains errors'; 
     ok $bagit->is_holey , 'bag is holey';
 
     my @fetches = $bagit->list_fetch;
@@ -402,11 +402,18 @@ note("update bag");
     
     like read_text("t/my-bag/data/LICENSE") , qr/requires 'perl'/ , 'file content is correct';
 
+    my $payload_oxum = $bagit->payload_oxum;
+
+    is $payload_oxum , '486.1' , 'old payload oxum';
+
+    ok $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt") , 'adding payload';
+
+    $payload_oxum = $bagit->payload_oxum;
+    
+    is $payload_oxum , '290486.2' , 'new payload oxum reflects the fetch file';
+
     remove_path("t/my-bag");
 }
-
-#TODO - Add tests for changing the Bag-Size and Payload-Oxum when adding a fetch 
-# file?
 
 done_testing;
 

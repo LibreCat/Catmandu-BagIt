@@ -26,14 +26,14 @@ throws_ok {
 } 'Catmandu::Error' , qq|caught an error|;
 
 ok $exporter->add({
-	_id   => 'bags/demo03' ,
+	_id   => 't/my-bag' ,
 	tags  => { 'Foo' => 'Bar' } ,
 	fetch => [ { 'http://lib.ugent.be' => 'data/ugent.txt'} ] ,
-}) , qq|created demo03 bag|;
+}) , qq|created t/my-bag bag|;
 
 ok $exporter->commit;
 
-my $importer = Catmandu::Importer::BagIt->new( bags => ['bags/demo03'] , verify => 1 , include_manifests => 1);
+my $importer = Catmandu::Importer::BagIt->new( bags => ['t/my-bag'] , verify => 1 , include_manifests => 1);
 
 ok $importer , 'created importer';
 
@@ -55,6 +55,6 @@ END {
 	my $error = [];
 	# Stupid chdir trick to make remove_tree work
 	chdir("lib");
-	remove_tree('../bags/demo03', { error => \$error });
+	remove_tree('../t/my-bag', { error => \$error });
 	print STDERR join("\n",@$error) , "\n" if @$error > 0;;
 };

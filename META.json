@@ -1,5 +1,5 @@
 {
-   "abstract" : "Catmandu modules for working with BagIt packages.",
+   "abstract" : "Low level Catmandu interface to the BagIt packages.",
    "author" : [
       "Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>"
    ],
@@ -36,12 +36,18 @@
          }
       },
       "runtime" : {
+         "recommends" : {
+            "Log::Any::Adapter::Log4perl" : "0.06",
+            "Log::Log4perl" : "1.44"
+         },
          "requires" : {
-            "Archive::BagIt" : "0.052",
             "Catmandu" : "0.9209",
-            "File::Path" : "2.09",
+            "File::Copy" : "0",
+            "File::Path" : "0",
+            "File::Slurper" : "0",
+            "File::Temp" : "0",
             "LWP::Simple" : "6.00",
-            "perl" : "5.008005"
+            "perl" : "v5.10.1"
          }
       },
       "test" : {

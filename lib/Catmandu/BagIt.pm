@@ -498,6 +498,10 @@ sub payload_oxum {
     my $size  = $self->_size;
     my $count = $self->list_files;
 
+    my $fetches = $self->list_fetch // 0;
+
+    $count += $fetches;
+
     return "$size.$count";
 }
 
@@ -623,7 +627,7 @@ sub _size {
     my $self = shift;
     my $path = $self->path;
 
-    my $total= 0;
+    my $total = 0;
 
     foreach my $item ($self->list_files) {
         my $size;
@@ -633,6 +637,11 @@ sub _size {
         else {
             $size = length($item->data);
         }
+        $total += $size;
+    }
+
+    foreach my $item ($self->list_fetch) {
+        my $size = $item->size;
         $total += $size;
     }
 
