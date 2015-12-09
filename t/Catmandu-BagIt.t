@@ -271,8 +271,8 @@ note("reading operations demo02 (invalid bag)");
 
     ok @list_files == 2 , 'list_files';
 
-    is $list_files[0]->name , 'ignore' , 'file->name';
-    is $list_files[1]->name , 'empty.txt' , 'file->name';
+    is $list_files[0]->name , 'empty.txt' , 'file->name';
+    is $list_files[1]->name , 'ignore' , 'file->name';
 
     my @info = $bagit->list_info_tags;
 
