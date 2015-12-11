@@ -1209,6 +1209,14 @@ __END__
 
 Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
+=begin markdown
+
+# STATUS
+
+[![Build Status](https://travis-ci.org/LibreCat/Catmandu-BagIt.svg?branch=master)](https://travis-ci.org/LibreCat/Catmandu-BagIt)
+
+=end markdown
+
 =head1 SYNOPSIS
 
     use Catmandu::BagIt;
