@@ -2,6 +2,7 @@ Revision history for Catmandu-BagIt
 
 {{$NEXT}}
         - Adding travis
+	- Fixing File::Slurp bug
 
 0.05  2015-12-09 14:50:19 CET
         - Creating a Catmandu::BagIt implementation of the BagIt spec

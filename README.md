@@ -2,6 +2,10 @@
 
 Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
+# STATUS
+
+[![Build Status](https://travis-ci.org/LibreCat/Catmandu-BagIt.svg?branch=master)](https://travis-ci.org/LibreCat/Catmandu-BagIt)
+
 # SYNOPSIS
 
     use Catmandu::BagIt;
