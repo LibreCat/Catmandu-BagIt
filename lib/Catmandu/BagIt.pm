@@ -1355,7 +1355,7 @@ Return the encoding of the BagIt.
 Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus 
 the files that need to be fetched from the network).
 
-=head2 paypayload_oxum()
+=head2 payload_oxum()
 
 Return the actual payload oxum of files found in the package.
 
