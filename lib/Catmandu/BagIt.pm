@@ -278,7 +278,7 @@ sub write {
     }
     else {
         $self->log->info("creating: $path");
-        mkdir $path;
+        mkpath($path);
         $self->_dirty($self->dirty | FLAG_BAGIT);
     }
 
