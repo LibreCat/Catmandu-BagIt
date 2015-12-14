@@ -1032,9 +1032,11 @@ sub _write_data {
     my @all_names_in_bag = ();
 
     foreach my $item ($self->list_files) {
+        my $filename = 'data/' . $item->{filename};
+        push @all_names_in_bag , $filename;
+
         next unless $item->flag & FLAG_DIRTY;
 
-        my $filename = 'data/' . $item->{filename};
         my $dir  = $filename; $dir =~ s/\/[^\/]+$//;
 
         $self->log->info("serializing $filename");
@@ -1061,8 +1063,6 @@ sub _write_data {
             write_text("$path/$filename", $item->data);
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
-
-        push @all_names_in_bag , $filename;
     }
 
     # Check deleted files

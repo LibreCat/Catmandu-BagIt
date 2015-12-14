@@ -381,9 +381,15 @@ note("update bag");
 
     ok ! -f "t/my-bag/data/test.txt" , 'removed t/my-bag/data/test.txt';
 
-    ok ! $bagit->is_dirty , 'bag is dirty';
+    ok ! $bagit->is_dirty , 'bag is not dirty';
 
     ok $bagit->complete , 'bag is now complete';
+
+    ok $bagit->add_file("test.txt","test789") , 'adding a new file';
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
 
     my $fh = IO::File->new("t/poem.txt");
 
@@ -393,8 +399,10 @@ note("update bag");
 
     ok !$fh->opened , 'file handle open closed';
 
+    ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
     ok -f "t/my-bag/data/poem.txt" , 'got a t/my-bag/data/poem.txt';
 
+    like read_text("t/my-bag/data/test.txt") , qr/test789/, 'file content is correct';
     like read_text("t/my-bag/data/poem.txt") , qr/Violets are blue/ , 'file content is correct';
 
     ok $bagit->add_file("poem.txt",IO::File->new("t/poem2.txt"), overwrite => 1) , 'setting new file content';
@@ -405,13 +413,13 @@ note("update bag");
 
     my $payload_oxum = $bagit->payload_oxum;
 
-    is $payload_oxum , '201.1' , 'payload oxum';
+    is $payload_oxum , '208.2' , 'payload oxum';
 
     ok $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt") , 'adding payload';
 
     $payload_oxum = $bagit->payload_oxum;
     
-    is $payload_oxum , '290201.2' , 'new payload oxum reflects the fetch file';
+    is $payload_oxum , '290208.3' , 'new payload oxum reflects the fetch file';
 
     remove_path("t/my-bag");
 }
