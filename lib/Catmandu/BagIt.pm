@@ -9,13 +9,16 @@ use Moo;
 use Encode;
 use Digest::MD5;
 use IO::File qw();
+use IO::Handle qw();
 use File::Copy;
 use List::MoreUtils qw(first_index uniq);
 use File::Path qw(remove_tree mkpath);
 use File::Slurper qw(read_lines write_text);
+use File::Temp qw(tempfile);
 use Catmandu::BagIt::Payload;
 use Catmandu::BagIt::Fetch;
 use POSIX qw(strftime);
+use LWP::UserAgent;
 use utf8;
 use namespace::clean;
 
@@ -62,6 +65,8 @@ has 'encoding' => (
     init_arg => undef,
 );
 
+has user_agent => (is => 'ro');
+
 has '_tags' => (
     is       => 'rw',
     default  => sub { [] },
@@ -98,6 +103,20 @@ has '_info' => (
     init_arg => undef,
 );
 
+has _http_client => (
+    is => 'ro', 
+    lazy => 1, 
+    builder => '_build_http_client', 
+    init_arg => 'user_agent'
+);
+
+sub _build_http_client {
+    my ($self) = @_;
+    my $ua = LWP::UserAgent->new;
+    $ua->agent('Catmandu-BagIt/' . $Catmandu::BagIt::VERSION);
+    $ua;
+}
+
 sub BUILD {
     my $self = shift;
 
@@ -131,11 +150,21 @@ sub list_files {
 }
 
 sub get_file {
-    my ($self,$name) = @_;
-    die "usage: get_file(name)" unless $name;
+    my ($self,$filename) = @_;
+    die "usage: get_file(filename)" unless $filename;
 
     for ($self->list_files) {
-        return $_ if $_->name eq $name;
+        return $_ if $_->filename eq $filename;
+    }
+    return undef;
+}
+
+sub get_fetch {
+    my ($self,$filename) = @_;
+    die "usage: get_fetch(filename)" unless $filename;
+
+    for ($self->list_fetch) {
+        return $_ if $_->filename eq $filename;
     }
     return undef;
 }
@@ -232,7 +261,7 @@ sub write {
         # we are ok the path exists and don't need to remove anything
         # updates are possible when overwrite => 1
     }
-    elsif ($opts{overwrite}) {
+    elsif ($opts{overwrite} && -d $path) {
         $self->log->info("removing: $path");
         remove_tree($path);
     }
@@ -270,40 +299,40 @@ sub write {
 }
 
 sub add_file {
-    my ($self, $name, $data, %opts) = @_;
+    my ($self, $filename, $data, %opts) = @_;
 
-    die "usage: add_file(name, data [, overwrite => 1])" 
-            unless defined($name) && defined($data);
+    die "usage: add_file(filename, data [, overwrite => 1])" 
+            unless defined($filename) && defined($data);
 
     $self->_error([]);
 
-    unless ($self->_is_legal_file_name($name)) {
-        $self->log->error("illegal file name $name");
-        $self->_push_error("illegal file name $name");
+    unless ($self->_is_legal_file_name($filename)) {
+        $self->log->error("illegal file name $filename");
+        $self->_push_error("illegal file name $filename");
         return;
     }
 
-    $self->log->info("adding file $name");
+    $self->log->info("adding file $filename");
 
     if ($opts{overwrite}) {
-        $self->remove_file($name);
+        $self->remove_file($filename);
     }
 
-    if ($self->get_checksum("$name")) {
-        $self->log->error("$name already exists in bag");
-        $self->_push_error("$name already exists in bag");
+    if ($self->get_checksum("$filename")) {
+        $self->log->error("$filename already exists in bag");
+        $self->_push_error("$filename already exists in bag");
         return;
     }
 
     push @{ $self->_files } , Catmandu::BagIt::Payload->new(
-                                    name => $name , 
+                                    filename => $filename , 
                                     data => $data ,
                                     flag => FLAG_DIRTY ,
                                 );
 
     my $sum = $self->_md5_sum($data);
 
-    $self->_sums->{"$name"} = $sum;
+    $self->_sums->{"$filename"} = $sum;
 
     # Total size changes, therefore tag manifest changes
     $self->_update_info;
@@ -316,32 +345,32 @@ sub add_file {
 }
 
 sub remove_file {
-    my ($self, $name) = @_;
+    my ($self, $filename) = @_;
 
-    die "usage: remove_file(name)" unless defined($name);
+    die "usage: remove_file(filename)" unless defined($filename);
 
     $self->_error([]);
 
-    unless ($self->get_checksum($name)) {
-        $self->log->error("$name doesn't exist in bag");
-        $self->_push_error("$name doesn't exist in bag");
+    unless ($self->get_checksum($filename)) {
+        $self->log->error("$filename doesn't exist in bag");
+        $self->_push_error("$filename doesn't exist in bag");
         return;
     }
 
-    $self->log->info("removing file $name");
+    $self->log->info("removing file $filename");
 
-    my $idx = first_index { $_->{name} eq $name } @{ $self->_files };
+    my $idx = first_index { $_->{filename} eq $filename } @{ $self->_files };
 
     unless ($idx != -1) {
-        $self->_push_error("$name doesn't exist in bag");
+        $self->_push_error("$filename doesn't exist in bag");
         return;
     }
 
-    my @files = grep { $_->{name} ne $name } @{ $self->_files };
+    my @files = grep { $_->{filename} ne $filename } @{ $self->_files };
 
     $self->_files(\@files);
 
-    delete $self->_sums->{$name};
+    delete $self->_sums->{$filename};
 
     $self->_update_info;
     $self->_update_tag_manifest;
@@ -393,6 +422,35 @@ sub remove_fetch {
     $self->_dirty($self->dirty | FLAG_FETCH | FLAG_TAG_MANIFEST);
 
     1;
+}
+
+sub mirror_fetch {
+    my ($self, $fetch) = @_;
+
+    die "usage mirror_fetch(<Catmandu::BagIt::Fetch>)"
+            unless defined($fetch) && ref($fetch) && ref($fetch) =~ /^Catmandu::BagIt::Fetch/;
+
+    my ($tmp_fh, $tmp_filename) = tempfile();
+
+    my $url       = $fetch->url;
+    my $filename  = $fetch->filename;
+    my $path      = $self->path;  
+
+    $self->log->info("mirroring $url -> $tmp_filename...");
+
+    my $response = $self->_http_client->mirror($url,$tmp_filename);
+
+    if ($response->is_success) {
+        $self->log->info("mirror is a success");
+    }
+    else {
+        $self->log->error("mirror $url -> $tmp_filename failed : $response->status_line");
+        return undef;
+    }
+
+    $self->log->info("updating file listing...");
+    $self->log->debug("add new $filename");
+    $self->add_file($filename, IO::File->new($tmp_filename,'r'), overwrite => 1);
 }
 
 sub add_info {
@@ -526,7 +584,7 @@ sub complete {
     my @missing = ();
 
     foreach my $file ($self->list_checksum) {
-        unless (grep { (my $name = $_->{name} || '') =~ /^$file$/ } $self->list_files) {
+        unless (grep { (my $filename = $_->{filename} || '') =~ /^$file$/ } $self->list_files) {
             push @missing , $file;
         }
     }
@@ -804,11 +862,11 @@ sub _read_files {
 
     while(my $file = <F>) {
         chomp($file);
-        my $name = $file;
-        $name =~ s/^$path\/data\///;
+        my $filename = $file;
+        $filename =~ s/^$path\/data\///;
         my $data = IO::File->new($file);
 
-        push @{ $self->_files } , Catmandu::BagIt::Payload->new(name => $name, data => $data);
+        push @{ $self->_files } , Catmandu::BagIt::Payload->new(filename => $filename, data => $data);
     }
 
     close(F);
@@ -976,17 +1034,17 @@ sub _write_data {
     foreach my $item ($self->list_files) {
         next unless $item->flag & FLAG_DIRTY;
 
-        my $name = 'data/' . $item->{name};
-        my $dir  = $name; $dir =~ s/\/[^\/]+$//;
+        my $filename = 'data/' . $item->{filename};
+        my $dir  = $filename; $dir =~ s/\/[^\/]+$//;
 
-        $self->log->info("serializing $name");
+        $self->log->info("serializing $filename");
 
         mkpath("$path/$dir") unless -d "$path/$dir";
 
         if ($item->is_io) {
             $item->fh->seek(0,0) if $item->data->can('seek');
             eval {
-                copy($item->fh, "$path/$name");
+                copy($item->fh, "$path/$filename");
             };
             if ($@) {
                 if ($@ =~ /are identical/) {
@@ -996,15 +1054,15 @@ sub _write_data {
             # Close the old handle
             $item->fh->close();
             # Reopen the file at the new position
-            $item->{data} = IO::File->new("$path/$name");
+            $item->{data} = IO::File->new("$path/$filename");
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
         else {
-            write_text("$path/$name", $item->data);
+            write_text("$path/$filename", $item->data);
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
 
-        push @all_names_in_bag , $name;
+        push @all_names_in_bag , $filename;
     }
 
     # Check deleted files
@@ -1014,12 +1072,12 @@ sub _write_data {
         while(my $file = <F>) {
             chomp($file);
             
-            my $name = $file;
-            $name =~ s/^$path\///;
+            my $filename = $file;
+            $filename =~ s/^$path\///;
  
-            unless (grep {$name eq $_} @all_names_in_bag) {
-                $self->log->info("deleting $path/$name");
-                unlink "$path/$name";
+            unless (grep {$filename eq $_} @all_names_in_bag) {
+                $self->log->info("deleting $path/$filename");
+                unlink "$path/$filename";
             }
         }
         close(F);
@@ -1181,10 +1239,10 @@ sub _md5_sum {
 }
 
 sub _is_legal_file_name {
-    my ($self, $name) = @_;
+    my ($self, $filename) = @_;
 
-    return 0 unless ($name =~ /^[[:alnum:].-_]+$/);
-    return 0 if ($name =~ m{(^\.|\/\.+\/)});
+    return 0 unless ($filename =~ /^[[:alnum:].-_]+$/);
+    return 0 if ($filename =~ m{(^\.|\/\.+\/)});
     return 1;
 }
 
@@ -1447,6 +1505,10 @@ Add a fetch entry to the BagIt.
 =head2 remove_fetch($filename)
 
 Remove a fetch entry from the BagIt.
+
+=head2 mirror_fetch($fetch)
+
+Mirror a Catmandu::BagIt::Fetch object to local disk.
 
 =head1 SEE ALSO
 

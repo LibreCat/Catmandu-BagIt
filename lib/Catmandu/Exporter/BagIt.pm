@@ -97,6 +97,7 @@ use Moo;
 
 with 'Catmandu::Exporter';
 
+has user_agent      => (is => 'ro');
 has ignore_existing => (is => 'ro' , default => sub { 0 });
 has overwrite       => (is => 'ro' , default => sub { 0 });
 has skip_manifest   => (is => 'ro' , default => sub { 0 });
@@ -110,7 +111,9 @@ sub add {
 
 	  Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
-    my $bagit = Catmandu::BagIt->new();
+    my $bagit = defined($self->user_agent) ? 
+                    Catmandu::BagIt->new(user_agent => $self->user_agent) : 
+                    Catmandu::BagIt->new();
 
     if (exists $data->{tags}) {
         for my $tag (keys %{$data->{tags}}) {
@@ -128,8 +131,10 @@ sub add {
             my ($fh, $filename) = tempfile();
 
             # For now using a simplistic mirror operation
-            unless ((my $code = mirror($url,$filename)) == RC_OK) {
-                Catmandu::Error->throw("failed to mirror $url to $filename : $code ");
+            my $response = $bagit->_http_client->mirror($url,$filename);
+
+            unless ($response->is_success) {
+                Catmandu::Error->throw("failed to mirror $url to $filename : " . $response->status_line);
             }
 
             $file =~ s{^data/}{};

@@ -6,6 +6,7 @@ use Test::More;
 use Test::Exception;
 use Role::Tiny;
 use File::Path qw(remove_tree);
+use Test::LWP::UserAgent;
 use Catmandu::Importer::BagIt;
 
 my $pkg;
@@ -15,7 +16,7 @@ BEGIN {
 };
 require_ok $pkg;
 
-my $exporter = $pkg->new();
+my $exporter = $pkg->new(user_agent => user_agent());
 
 isa_ok $exporter, $pkg;
 
@@ -28,10 +29,12 @@ throws_ok {
 ok $exporter->add({
 	_id   => 't/my-bag' ,
 	tags  => { 'Foo' => 'Bar' } ,
-	fetch => [ { 'http://lib.ugent.be' => 'data/ugent.txt'} ] ,
+	fetch => [ { 'http://demo.org/' => 'data/poem.txt'} ] ,
 }) , qq|created t/my-bag bag|;
 
-ok $exporter->commit;
+ok $exporter->commit , 'commit';
+
+ok -r 't/my-bag/data/poem.txt' , 'we got a poem.txt';
 
 my $importer = Catmandu::Importer::BagIt->new( bags => ['t/my-bag'] , verify => 1 , include_manifests => 1);
 
@@ -47,10 +50,33 @@ is $first->{is_valid} , 1 , 'the bag is valid';
 
 ok $first->{version} , 'checking version bug';
 
-ok exists $first->{manifest}->{'data/ugent.txt'} , 'found a manifest';
+ok exists $first->{manifest}->{'data/poem.txt'} , 'found a manifest';
 
-done_testing 12;
+done_testing 13;
  
+sub user_agent  {
+    my $ua = Test::LWP::UserAgent->new(agent => 'Test/1.0');
+
+    my $text =<<EOF;
+Roses are red,
+Violets are blue,
+Sugar is sweet,
+And so are you.
+EOF
+
+    $ua->map_response(
+        qr{^http://demo.org/$},
+        HTTP::Response->new(
+            '200' ,
+            'OK' ,
+            [ 'Content-Type' => 'text/plain'] ,
+            $text
+        )
+    );
+
+    $ua;
+}
+
 END {
 	my $error = [];
 	# Stupid chdir trick to make remove_tree work

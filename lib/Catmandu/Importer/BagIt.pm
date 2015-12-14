@@ -171,7 +171,7 @@ sub read_bag {
     }
 
     if ($self->include_payloads) {
-        $item->{payload_files}     = [ map { "data/" . $_->name } $bagit->list_files ];
+        $item->{payload_files}     = [ map { "data/" . $_->filename } $bagit->list_files ];
         $item->{non_payload_files} = [ $bagit->list_tagsum ];
     }
 

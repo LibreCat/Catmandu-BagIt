@@ -9,6 +9,7 @@ use IO::File;
 use POSIX qw(strftime);
 use File::Path qw(remove_tree);
 use File::Slurper 'read_text';
+use Test::LWP::UserAgent;
 use utf8;
 
 #use Data::Dumper;
@@ -123,7 +124,7 @@ note("files");
 
     ok @files == 1 , 'count 1 file';
 
-    is $files[0]->name   , 'test1.txt' , 'file->name';
+    is $files[0]->filename   , 'test1.txt' , 'file->filename';
     ok !$files[0]->is_io , 'file->is_io failes';
     is $files[0]->data   , 'abcdefghijklmnopqrstuvwxyz' , 'file->data';
     is ref($files[0]->fh) , 'IO::String', 'file->fh blessed';
@@ -216,9 +217,9 @@ note("reading operations demo01 (valid bag)");
     my $file = $list_files[0];
 
     is ref($file)  , 'Catmandu::BagIt::Payload' , 'file is a payload';
-    is $file->name , 'Catmandu-0.9204.tar.gz' , 'file->name';
+    is $file->filename , 'Catmandu-0.9204.tar.gz' , 'file->filename';
     is ref($file->fh) , 'IO::File' , 'file->fh';
-    is $bagit->get_checksum($file->name) , 'c8accb44741272d63f6e0d72f34b0fde' , 'get_checksum';
+    is $bagit->get_checksum($file->filename) , 'c8accb44741272d63f6e0d72f34b0fde' , 'get_checksum';
 
     my @checksums = $bagit->list_checksum;
 
@@ -267,12 +268,12 @@ note("reading operations demo02 (invalid bag)");
 
     is $bagit->get_info('Test') , $text , 'Test info';
 
-    my @list_files = sort { $a->name cmp $b->name } $bagit->list_files;
+    my @list_files = sort { $a->filename cmp $b->filename } $bagit->list_files;
 
     ok @list_files == 2 , 'list_files';
 
-    is $list_files[0]->name , 'empty.txt' , 'file->name';
-    is $list_files[1]->name , 'ignore' , 'file->name';
+    is $list_files[0]->filename , 'empty.txt' , 'file->filename';
+    is $list_files[1]->filename , 'ignore' , 'file->filename';
 
     my @info = $bagit->list_info_tags;
 
@@ -384,33 +385,56 @@ note("update bag");
 
     ok $bagit->complete , 'bag is now complete';
 
-    my $fh = IO::File->new("LICENSE");
+    my $fh = IO::File->new("t/poem.txt");
 
-    ok $bagit->add_file("LICENSE",$fh) , 'add_file(IO::File)';
+    ok $bagit->add_file("poem.txt",$fh) , 'add_file(IO::File)';
 
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
 
     ok !$fh->opened , 'file handle open closed';
 
-    ok -f "t/my-bag/data/LICENSE" , 'got a t/my-bag/data/LICENSE';
+    ok -f "t/my-bag/data/poem.txt" , 'got a t/my-bag/data/poem.txt';
 
-    like read_text("t/my-bag/data/LICENSE") , qr/This software is copyright/ , 'file content is correct';
+    like read_text("t/my-bag/data/poem.txt") , qr/Violets are blue/ , 'file content is correct';
 
-    ok $bagit->add_file("LICENSE",IO::File->new("cpanfile"), overwrite => 1) , 'setting new file content';
+    ok $bagit->add_file("poem.txt",IO::File->new("t/poem2.txt"), overwrite => 1) , 'setting new file content';
 
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
     
-    like read_text("t/my-bag/data/LICENSE") , qr/requires 'perl'/ , 'file content is correct';
+    like read_text("t/my-bag/data/poem.txt") , qr/The rose is red, the violet's blue/ , 'file content is correct';
 
     my $payload_oxum = $bagit->payload_oxum;
 
-    is $payload_oxum , '486.1' , 'old payload oxum';
+    is $payload_oxum , '201.1' , 'payload oxum';
 
     ok $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt") , 'adding payload';
 
     $payload_oxum = $bagit->payload_oxum;
     
-    is $payload_oxum , '290486.2' , 'new payload oxum reflects the fetch file';
+    is $payload_oxum , '290201.2' , 'new payload oxum reflects the fetch file';
+
+    remove_path("t/my-bag");
+}
+
+note("mirror fetch");
+{
+    my $bagit = Catmandu::BagIt->new(user_agent => user_agent() );
+
+    $bagit->add_fetch("http://demo.org/","65","poem.txt");
+
+    my $fetch = $bagit->get_fetch("poem.txt");
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    ok $bagit->mirror_fetch($fetch) , 'mirror_fetch';
+
+    ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
+
+    ok -r "t/my-bag/data/poem.txt";
+
+    my $size = [stat("t/my-bag/data/poem.txt")]->[7];
+
+    is $size , 65 , 'got the correct size';
 
     remove_path("t/my-bag");
 }
@@ -425,4 +449,27 @@ sub remove_path {
        remove_tree("../$path");
     }
     chdir("..");
+}
+
+sub user_agent  {
+    my $ua = Test::LWP::UserAgent->new(agent => 'Test/1.0');
+
+    my $text =<<EOF;
+Roses are red,
+Violets are blue,
+Sugar is sweet,
+And so are you.
+EOF
+
+    $ua->map_response(
+        qr{^http://demo.org/$},
+        HTTP::Response->new(
+            '200' ,
+            'OK' ,
+            [ 'Content-Type' => 'text/plain'] ,
+            $text
+        )
+    );
+
+    $ua;
 }
