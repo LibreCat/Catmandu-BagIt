@@ -2,7 +2,7 @@ package Catmandu::BagIt::Fetch;
 use Moo;
 use IO::String;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 has 'url'      => (is => 'ro');
 has 'size'     => (is => 'ro');
