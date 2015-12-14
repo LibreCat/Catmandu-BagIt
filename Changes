@@ -1,7 +1,9 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
-
+        - Adding fetch mirror support
+        - Fixing network related tests
+        
 0.06  2015-12-11 12:30:02 CET
         - Adding travis
 	- Fixing File::Slurp bug

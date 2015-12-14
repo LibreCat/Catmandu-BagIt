@@ -2,6 +2,8 @@ package Catmandu::BagIt::Payload;
 use Moo;
 use IO::String;
 
+our $VERSION = '0.06';
+
 has 'filename' => (is => 'ro');
 has 'data' => (is => 'ro');
 has 'flag' => (is => 'rw', default => 0);

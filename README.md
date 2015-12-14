@@ -139,7 +139,7 @@ Return the encoding of the BagIt.
 Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus 
 the files that need to be fetched from the network).
 
-## paypayload\_oxum()
+## payload\_oxum()
 
 Return the actual payload oxum of files found in the package.
 
@@ -231,6 +231,10 @@ Add a fetch entry to the BagIt.
 ## remove\_fetch($filename)
 
 Remove a fetch entry from the BagIt.
+
+## mirror\_fetch($fetch)
+
+Mirror a Catmandu::BagIt::Fetch object to local disk.
 
 # SEE ALSO
 

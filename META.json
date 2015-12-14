@@ -46,6 +46,7 @@
             "File::Path" : "0",
             "File::Slurper" : "0",
             "File::Temp" : "0",
+            "IO" : "0",
             "LWP::Simple" : "6.00",
             "perl" : "v5.10.1"
          }
@@ -54,6 +55,7 @@
          "requires" : {
             "Test::Deep" : "0.112",
             "Test::Exception" : "0.32",
+            "Test::LWP::UserAgent" : "0",
             "Test::More" : "1.001003"
          }
       }

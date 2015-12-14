@@ -95,6 +95,8 @@ use IO::File;
 use LWP::Simple;
 use Moo;
 
+our $VERSION = '0.06';
+
 with 'Catmandu::Exporter';
 
 has user_agent      => (is => 'ro');

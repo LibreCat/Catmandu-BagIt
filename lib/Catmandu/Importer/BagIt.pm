@@ -120,6 +120,8 @@ use Catmandu::Util qw(:is);
 use Catmandu::BagIt;
 use Moo;
 
+our $VERSION = '0.06';
+
 with 'Catmandu::Importer';
 
 has bags              => (is => 'ro' , required => 1);
