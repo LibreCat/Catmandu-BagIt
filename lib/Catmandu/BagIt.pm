@@ -1272,6 +1272,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 # STATUS
 
 [![Build Status](https://travis-ci.org/LibreCat/Catmandu-BagIt.svg?branch=master)](https://travis-ci.org/LibreCat/Catmandu-BagIt)
+[![Coverage Status](https://coveralls.io/repos/LibreCat/Catmandu-BagIt/badge.svg?branch=master&service=github)](https://coveralls.io/github/LibreCat/Catmandu-BagIt?branch=master)
 
 =end markdown
 
