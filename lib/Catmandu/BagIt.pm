@@ -1317,7 +1317,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     printf "files:\n";
     for my $file ($bagit->list_files) {
         my $stat = [$file->data->stat];
-        printf " name: %s\n", $file->name;
+        printf " name: %s\n", $file->filename;
         printf " size: %s\n", $stat->[7];
         printf " last-mod: %s\n", scalar(localtime($stat->[9]));
     }
