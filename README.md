@@ -99,9 +99,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt");
     $bagit->remove_fetch("shortstories.txt");
 
-    $bagit->write("bags/demo04"); # fails when the bag already exists
-    $bagit->write("bags/demo04", new => 1); # recreate the bag when it already existed
-    $bagit->write("bags/demo04", overwrite => 1); # overwrites an exiting bag
+    unless ($bagit->locked) {
+        $bagit->write("bags/demo04"); # fails when the bag already exists
+        $bagit->write("bags/demo04", new => 1); # recreate the bag when it already existed
+        $bagit->write("bags/demo04", overwrite => 1); # overwrites an exiting bag
+    }
 
 # CATMANDU MODULES
 
@@ -122,6 +124,10 @@ Open an exiting BagIt object
 
 Write a BagIt to disk. Options: new => 1 recreate the bag when it already existed, overwrite => 1 overwrite
 and existing bag (updating the changed tags/files);
+
+## locked
+
+Check if a process has locked the BagIt. Or, a previous process didn't complete the write operations.
 
 ## path()
 

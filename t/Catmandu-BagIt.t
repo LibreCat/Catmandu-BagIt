@@ -6,6 +6,7 @@ use Test::More;
 use Test::Exception;
 use Digest::MD5;
 use IO::File;
+use IO::Handle;
 use POSIX qw(strftime);
 use File::Path qw(remove_tree);
 use File::Slurper 'read_text';
@@ -443,6 +444,23 @@ note("mirror fetch");
     my $size = [stat("t/my-bag/data/poem.txt")]->[7];
 
     is $size , 65 , 'got the correct size';
+
+    remove_path("t/my-bag");
+}
+
+note("lock");
+{
+    my $bagit = Catmandu::BagIt->read("bags/demo03");
+
+    ok ! $bagit->locked , '! locked';
+
+    $bagit = Catmandu::BagIt->new;
+   
+    ok $bagit->write("t/my-bag");
+
+    $bagit->touch("t/my-bag/.lock");
+
+    ok $bagit->locked , 'locked';
 
     remove_path("t/my-bag");
 }

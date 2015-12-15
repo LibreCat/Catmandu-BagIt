@@ -249,6 +249,16 @@ sub write {
 
     die "usage: write(path[, overwrite => 1])" unless $path;
 
+    # Check if other processes are writing or previous processes died
+    if ( 
+        (defined($self->path) && -f $self->path . "/.lock") || 
+        -f "$path/.lock"
+       ) {
+        $self->log->error($self->path . "/.lock or $path/.lock exists");
+        $self->_push_error($self->path . "/.lock or $path/.lock exists");
+        return undef;
+    }
+
     if (defined($self->path) && $path ne $self->path) {
         $self->log->info("copying from old path: " . $self->path);
         $self->_dirty($self->dirty | FLAG_BAGIT | FLAG_BAG_INFO | FLAG_TAG_MANIFEST | FLAG_MANIFEST | FLAG_DATA);
@@ -282,6 +292,11 @@ sub write {
         $self->_dirty($self->dirty | FLAG_BAGIT);
     }
 
+    unless ($self->touch("$path/.lock")) {
+        $self->log->error("failed to create $path/.lock");
+        return undef;
+    }
+
     $self->_path($path);
 
     my $ok = 0;
@@ -295,7 +310,31 @@ sub write {
 
     $self->_dirty(0);
 
+    unlink("$path/.lock");
+
     $ok == 6;
+}
+
+sub locked {
+    my ($self,$path) = @_;
+    $path //= $self->path;
+
+    return undef unless defined($path);
+
+    -f "$path/.lock";
+}
+
+sub touch {
+    my ($self,$path) = @_;
+
+    die "usage: touch(path)"
+            unless defined($path);
+    local(*F);
+    open(F,">$path") || die "failed to open $path for writing: $!";
+    print F "";
+    close(F);
+
+    1;
 }
 
 sub add_file {
@@ -1368,9 +1407,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt");
     $bagit->remove_fetch("shortstories.txt");
 
-    $bagit->write("bags/demo04"); # fails when the bag already exists
-    $bagit->write("bags/demo04", new => 1); # recreate the bag when it already existed
-    $bagit->write("bags/demo04", overwrite => 1); # overwrites an exiting bag
+    unless ($bagit->locked) {
+        $bagit->write("bags/demo04"); # fails when the bag already exists
+        $bagit->write("bags/demo04", new => 1); # recreate the bag when it already existed
+        $bagit->write("bags/demo04", overwrite => 1); # overwrites an exiting bag
+    }
 
 =head1 CATMANDU MODULES
 
@@ -1396,6 +1437,10 @@ Open an exiting BagIt object
 
 Write a BagIt to disk. Options: new => 1 recreate the bag when it already existed, overwrite => 1 overwrite
 and existing bag (updating the changed tags/files);
+
+=head2 locked
+
+Check if a process has locked the BagIt. Or, a previous process didn't complete the write operations.
 
 =head2 path()
 
