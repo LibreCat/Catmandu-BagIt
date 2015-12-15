@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.09  2015-12-15 11:07:25 CET
         - Adding locking support
         
 0.08  2015-12-14 16:09:13 CET
