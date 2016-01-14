@@ -6,7 +6,7 @@ Catmandu::Exporter::BagIt - Package that exports data as BagIts
 
 =head1 SYNOPSIS
 
-   use Catmandu::Exporter::BagIt
+   use Catmandu::Exporter::BagIt;
 
    my $exporter = Catmandu::Exporter::BagIt->new(
                             overwrite     => 0 ,

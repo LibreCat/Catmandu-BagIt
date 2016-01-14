@@ -24,7 +24,7 @@ copy_field(identifier.$last,bag.fetch.0.$append)
 
 # For now we can only download one fulltext file using this technique
 copy_field(bag.fetch.0.0,bag.fetch.0.1)
-replace_all(bag.fetch.0.1,'.*\/','data/')
+replace_all(bag.fetch.0.1,'.*/','data/')
 hash(bag.fetch.0)
 
 # Now we have all the data, delete the rest

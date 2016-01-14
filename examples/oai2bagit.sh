@@ -8,7 +8,7 @@
 OAI_BASE_URL=http://pub.uni-bielefeld.de/oai
 SET_SPEC=workingPaperFtxt
 MAX_NUM_RECORDS=10
-FIX_FILE=pub-uni-bielefeld-de.fix
+FIX_FILE=examples/pub-uni-bielefeld-de.fix
 
 # Here we fetch OAI data from a repository, grep only those records that are not 
 # deleted, take the first MAX_NUM_RECORDS and extract with a Catmandu Fix only
