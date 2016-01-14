@@ -120,7 +120,7 @@ use Catmandu::Util qw(:is);
 use Catmandu::BagIt;
 use Moo;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 with 'Catmandu::Importer';
 
