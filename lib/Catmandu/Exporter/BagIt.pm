@@ -111,7 +111,7 @@ sub add {
 
     return 1 if -d $directory && $self->ignore_existing;
 
-	  Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
+    Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
     my $bagit = defined($self->user_agent) ? 
                     Catmandu::BagIt->new(user_agent => $self->user_agent) : 
@@ -130,7 +130,7 @@ sub add {
 
             mkpath("$directory/data") unless -d "$directory/data";
 
-            my ($fh, $filename) = tempfile();
+            my ($fh, $filename) = tempfile(UNLINK => 1);
 
             # For now using a simplistic mirror operation
             my $response = $bagit->_http_client->mirror($url,$filename);
