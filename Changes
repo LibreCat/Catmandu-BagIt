@@ -1,7 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
-
+        - Fixing auto cleanup of temporary files
+        
 0.09  2015-12-15 11:07:25 CET
         - Adding locking support
         
