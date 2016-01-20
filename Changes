@@ -2,6 +2,9 @@ Revision history for Catmandu-BagIt
 
 {{$NEXT}}
 
+0.11  2016-01-20 15:44:40 CET
+        - Extra autocleaning
+        
 0.10  2016-01-14 16:05:00 CET
         - Fixing auto cleanup of temporary files
         
