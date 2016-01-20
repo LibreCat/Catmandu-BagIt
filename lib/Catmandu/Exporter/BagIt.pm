@@ -131,7 +131,7 @@ sub add {
             mkpath("$directory/data") unless -d "$directory/data";
 
             my $tmp = File::Temp->new(UNLINK => 1, suffix => '.tmp')
-              or Catmandu::Error->throw("Could not creat temp file");
+              or Catmandu::Error->throw("Could not create temp file");
 
             # For now using a simplistic mirror operation
             my $fname = $tmp->filename;
