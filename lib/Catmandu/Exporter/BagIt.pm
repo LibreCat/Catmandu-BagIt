@@ -143,7 +143,6 @@ sub add {
 
             $file =~ s{^data/}{};
             $bagit->add_file($file,IO::File->new($fname));
-            #$tmp->unlink_on_destroy(1);
             $bagit->write($directory, overwrite => 1);
             $tmp->unlink_on_destroy(1);
         }
