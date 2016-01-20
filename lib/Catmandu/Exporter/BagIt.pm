@@ -31,7 +31,7 @@ and one or more fields:
                       'DC-Title'   => 'My downloads' ,
                       'DC-Creator' => 'Bunny, Bugs' ,
                     },
-           }, 
+           },
            'fetch' => [
                { 'http://server/download1.pdf'  => 'data/my_download1.pdf' } ,
                { 'http://server2/download2.pdf' => 'data/my_download2.pdf' } ,
@@ -90,7 +90,7 @@ use namespace::clean;
 use Catmandu::Sane;
 use Catmandu::BagIt;
 use File::Path qw(mkpath);
-use File::Temp qw(tempfile);
+use File::Temp;
 use IO::File;
 use LWP::Simple;
 use Moo;
@@ -113,8 +113,8 @@ sub add {
 
     Catmandu::Error->throw("$directory exists") if -d $directory && ! $self->overwrite;
 
-    my $bagit = defined($self->user_agent) ? 
-                    Catmandu::BagIt->new(user_agent => $self->user_agent) : 
+    my $bagit = defined($self->user_agent) ?
+                    Catmandu::BagIt->new(user_agent => $self->user_agent) :
                     Catmandu::BagIt->new();
 
     if (exists $data->{tags}) {
@@ -130,18 +130,22 @@ sub add {
 
             mkpath("$directory/data") unless -d "$directory/data";
 
-            my ($fh, $filename) = tempfile(UNLINK => 1);
+            my $tmp = File::Temp->new(UNLINK => 1, suffix => '.tmp')
+              or Catmandu::Error->throw("Could not creat temp file");
 
             # For now using a simplistic mirror operation
-            my $response = $bagit->_http_client->mirror($url,$filename);
+            my $fname = $tmp->filename;
+            my $response = $bagit->_http_client->mirror($url,$fname);
 
             unless ($response->is_success) {
-                Catmandu::Error->throw("failed to mirror $url to $filename : " . $response->status_line);
+                Catmandu::Error->throw("failed to mirror $url to $fname : " . $response->status_line);
             }
 
             $file =~ s{^data/}{};
-            $bagit->add_file($file,IO::File->new($filename));
+            $bagit->add_file($file,IO::File->new($fname));
+            #$tmp->unlink_on_destroy(1);
             $bagit->write($directory, overwrite => 1);
+            $tmp->unlink_on_destroy(1);
         }
     }
 
