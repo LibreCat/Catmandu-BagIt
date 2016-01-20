@@ -19,13 +19,19 @@ join_field(bag.tags.DC-Identifier,' ')
 copy_field(rights,bag.tags.DC-Rights)
 join_field(bag.tags.DC-Rights,' ')
 
-# In Bielefeld PUB the fulltext download is the last identifier field
-copy_field(identifier.$last,bag.fetch.0.$append)
+# In Bielefeld PUB the fulltext download is contained in the identifier field
+# works for multiple files
+do list(path:identifier, var:loop)
+  if all_match(loop, 'download')
+    copy_field(loop,tmp.0)
+    copy_field(loop,tmp.1)
+    replace_all(tmp.1,'.*/','data/')
+    hash(tmp)
+    copy_field(tmp,bag.fetch.$append)
+    remove_field(tmp)
+  end
+end
 
-# For now we can only download one fulltext file using this technique
-copy_field(bag.fetch.0.0,bag.fetch.0.1)
-replace_all(bag.fetch.0.1,'.*/','data/')
-hash(bag.fetch.0)
 
 # Now we have all the data, delete the rest
 retain_field(bag)
