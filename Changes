@@ -1,6 +1,7 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+        - Fixed bug in checking file names
 
 0.11  2016-01-20 15:44:40 CET
         - Extra autocleaning
