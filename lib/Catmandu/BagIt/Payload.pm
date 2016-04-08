@@ -2,7 +2,7 @@ package Catmandu::BagIt::Payload;
 use Moo;
 use IO::String;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 has 'filename' => (is => 'ro');
 has 'data' => (is => 'ro');

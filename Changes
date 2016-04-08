@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.12  2016-04-08 16:05:37 CEST
         - Fixed bug in checking file names
 
 0.11  2016-01-20 15:44:40 CET
