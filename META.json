@@ -44,10 +44,10 @@
             "Catmandu" : "0.9209",
             "File::Copy" : "0",
             "File::Path" : "0",
-            "File::Slurper" : "0",
             "File::Temp" : "0",
             "IO" : "0",
             "LWP::Simple" : "6.00",
+            "Path::Tiny" : "0",
             "perl" : "v5.10.1"
          }
       },

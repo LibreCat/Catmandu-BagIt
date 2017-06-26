@@ -13,7 +13,7 @@ use IO::Handle qw();
 use File::Copy;
 use List::MoreUtils qw(first_index uniq);
 use File::Path qw(remove_tree mkpath);
-use File::Slurper qw(read_lines write_text);
+use Path::Tiny;
 use File::Temp qw(tempfile);
 use Catmandu::BagIt::Payload;
 use Catmandu::BagIt::Fetch;
@@ -838,7 +838,7 @@ sub _read_fetch {
 
     $self->log->debug("reading fetch.txt");
 
-    foreach my $line (read_lines("$path/fetch.txt",'UTF-8')) {
+    foreach my $line (path("$path/fetch.txt")->lines_utf8) {
         $line =~ s/\r\n$/\n/g;
         chomp($line);
 
@@ -863,7 +863,7 @@ sub _read_tag_manifest {
 
     $self->log->debug("reading tagmanifest-md5.txt");
 
-    foreach my $line (read_lines("$path/tagmanifest-md5.txt",'UTF-8')) {
+    foreach my $line (path("$path/tagmanifest-md5.txt")->lines_utf8) {
        $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
@@ -885,7 +885,7 @@ sub _read_manifest {
         return 0;
     }
 
-    foreach my $line (read_lines("$path/manifest-md5.txt",'UTF-8')) {
+    foreach my $line (path("$path/manifest-md5.txt")->lines_utf8) {
         $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
@@ -966,7 +966,7 @@ sub _read_info {
         return 0;
     }
 
-    foreach my $line (read_lines($info_file, 'UTF-8')) {
+    foreach my $line (path($info_file)->lines_utf8) {
         $line =~ s/\r\n$/\n/g;
         chomp($line);
 
@@ -995,7 +995,7 @@ sub _read_version {
         return 0;
     }
 
-    foreach my $line (read_lines("$path/bagit.txt",'UTF-8')) {
+    foreach my $line (path("$path/bagit.txt")->lines_utf8) {
     $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($n,$v) = split(/\s*:\s*/,$line,2);
@@ -1149,7 +1149,7 @@ sub _write_data {
         }
         else {
             # If the file is a text string write dump it to disk
-            write_text("$path/$filename", $item->data);
+            path("$path/$filename")->spew_utf8($item->data);
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
     }

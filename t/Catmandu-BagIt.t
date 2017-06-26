@@ -9,7 +9,7 @@ use IO::File;
 use IO::Handle;
 use POSIX qw(strftime);
 use File::Path qw(remove_tree);
-use File::Slurper 'read_text';
+use Path::Tiny;
 use Test::LWP::UserAgent;
 use utf8;
 
@@ -136,9 +136,9 @@ note("files");
     @files = $bagit->list_files;
     ok @files == 0 , 'count 0 files';
 
-    ok $bagit->is_dirty , 'bag is still dirty'; 
+    ok $bagit->is_dirty , 'bag is still dirty';
 
-    ok $bagit->add_file("日本.txt","日本") , 'add_file utf8';  
+    ok $bagit->add_file("日本.txt","日本") , 'add_file utf8';
 
     is [$bagit->list_files]->[0]->data , '日本' , 'utf8 data test';
 
@@ -148,7 +148,7 @@ note("files");
 
     my $file = [ $bagit->list_files ]->[0];
 
-    is ref($file->fh) , 'IO::File' , 'file->fh is IO::File'; 
+    is ref($file->fh) , 'IO::File' , 'file->fh is IO::File';
 }
 
 note("fetch");
@@ -174,7 +174,7 @@ note("fetch");
 
     ok @fetches == 0 , 'list_fetch';
 
-    ok $bagit->is_dirty , 'bag is still dirty'; 
+    ok $bagit->is_dirty , 'bag is still dirty';
 }
 
 note("complete & valid");
@@ -245,7 +245,7 @@ note("reading operations demo02 (invalid bag)");
     ok $bagit , 'read(bags/demo02)';
     ok !$bagit->complete , 'bag is not complete';
     ok !$bagit->valid , 'bag is not valid';
-    ok $bagit->errors , 'bag contains errors'; 
+    ok $bagit->errors , 'bag contains errors';
     ok !$bagit->is_holey , 'bag is not holey';
     ok !$bagit->is_dirty , 'bag is not dirty';
     is $bagit->path , 'bags/demo02' , 'path';
@@ -258,7 +258,7 @@ note("reading operations demo02 (invalid bag)");
     is $bagit->get_info('Bagging-Date') , '2014-10-03' , 'Bagging-Date info';
     is $bagit->get_info('Payload-Oxum') , '40447.19' , 'Payload-Oxum info';
 
-    my $text = "\"Well, Prince, so Genoa and Lucca are now just family estates "  . 
+    my $text = "\"Well, Prince, so Genoa and Lucca are now just family estates "  .
                "of the Buonapartes. But I warn you, if you don't tell me that "   .
                "this means war, if you still try to defend the infamies and "     .
                "horrors perpetrated by that Antichrist- I really believe he is "  .
@@ -288,7 +288,7 @@ note("reading operations demo03 (holey bag)");
     ok !$bagit->complete , 'bag is not complete';
     ok $bagit->valid , 'bag is not valid';
     ok !$bagit->is_dirty , 'bag is not dirty';
-    ok !$bagit->errors , 'bag contains errors'; 
+    ok !$bagit->errors , 'bag contains errors';
     ok $bagit->is_holey , 'bag is holey';
 
     my @fetches = $bagit->list_fetch;
@@ -307,7 +307,7 @@ note("write to disk");
     ok $bagit , 'new';
 
     ok $bagit->is_dirty, 'bag is dirty';
-    ok $bagit->write("t/my-bag") , 'write(t/my-bag)'; 
+    ok $bagit->write("t/my-bag") , 'write(t/my-bag)';
     ok $bagit->complete, 'bag is now complete';
     ok $bagit->valid , 'bag is now valid';
     ok !$bagit->is_dirty , 'bag is not dirty anymore';
@@ -323,7 +323,7 @@ note("write to disk");
     $bagit2->add_info('Test',123);
 
     ok ! $bagit2->write("t/my-bag") , 'failed to overwrite existing bag';
-    
+
     ok $bagit2->is_dirty, 'bag is dirty';
 
     ok $bagit2->write("t/my-bag", overwrite => 1) , 'write with overwrite';
@@ -374,7 +374,7 @@ note("update bag");
 
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
 
-    is read_text("t/my-bag/data/test.txt") , "test456" , "file content is correctly updated";
+    is path("t/my-bag/data/test.txt")->slurp_utf8 , "test456" , "file content is correctly updated";
 
     ok $bagit->remove_file("test.txt") , 'remove_file';
 
@@ -403,14 +403,14 @@ note("update bag");
     ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
     ok -f "t/my-bag/data/poem.txt" , 'got a t/my-bag/data/poem.txt';
 
-    like read_text("t/my-bag/data/test.txt") , qr/test789/, 'file content is correct';
-    like read_text("t/my-bag/data/poem.txt") , qr/Violets are blue/ , 'file content is correct';
+    like path("t/my-bag/data/test.txt")->slurp_utf8 , qr/test789/, 'file content is correct';
+    like path("t/my-bag/data/poem.txt")->slurp_utf8 , qr/Violets are blue/ , 'file content is correct';
 
     ok $bagit->add_file("poem.txt",IO::File->new("t/poem2.txt"), overwrite => 1) , 'setting new file content';
 
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
-    
-    like read_text("t/my-bag/data/poem.txt") , qr/The rose is red, the violet's blue/ , 'file content is correct';
+
+    like path("t/my-bag/data/poem.txt")->slurp_utf8 , qr/The rose is red, the violet's blue/ , 'file content is correct';
 
     my $payload_oxum = $bagit->payload_oxum;
 
@@ -419,7 +419,7 @@ note("update bag");
     ok $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt") , 'adding payload';
 
     $payload_oxum = $bagit->payload_oxum;
-    
+
     is $payload_oxum , '290208.3' , 'new payload oxum reflects the fetch file';
 
     remove_path("t/my-bag");
@@ -455,7 +455,7 @@ note("lock");
     ok ! $bagit->locked , '! locked';
 
     $bagit = Catmandu::BagIt->new;
-   
+
     ok $bagit->write("t/my-bag");
 
     $bagit->touch("t/my-bag/.lock");
