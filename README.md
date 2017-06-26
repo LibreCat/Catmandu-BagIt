@@ -28,20 +28,20 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     printf "tags:\n";
     for my $tag ($bagit->list_info_tags) {
         my @values = $bagit->get_info($tag);
-        printf " $tag: %s\n" , join(", ",@values); 
+        printf " $tag: %s\n" , join(", ",@values);
     }
 
     printf "tag-sums:\n";
     for my $file ($bagit->list_tagsum) {
         my $sum = $bagit->get_tagsum($file);
-        printf " $file: %s\n" , $sum; 
+        printf " $file: %s\n" , $sum;
     }
 
     # Read the file listing as found in the manifest file
     printf "file-sums:\n";
     for my $file ($bagit->list_checksum) {
         my $sum = $bagit->get_checksum($file);
-        printf " $file: %s\n" , $sum; 
+        printf " $file: %s\n" , $sum;
     }
 
     # Read the real listing of files as found on the disk
@@ -143,7 +143,7 @@ Return the encoding of the BagIt.
 
 ## size()
 
-Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus 
+Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus
 the files that need to be fetched from the network).
 
 ## payload\_oxum()
@@ -160,7 +160,7 @@ Return true when the BagIt contains a non emtpy fetch configuration.
 
 ## is\_error()
 
-Return an ARRAY of errors when checking complete, valid and write. 
+Return an ARRAY of errors when checking complete, valid and write.
 
 ## complete()
 
@@ -186,7 +186,7 @@ Remove an info $tag.
 
 ## get\_info($tag, \[$delim\])
 
-Return an ARRAY of values found for the $tag name. Or, in scalar context, return a string of 
+Return an ARRAY of values found for the $tag name. Or, in scalar context, return a string of
 all values optionally delimeted by $delim.
 
 ## list\_tagsum()

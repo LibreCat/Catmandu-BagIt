@@ -22,35 +22,40 @@ use LWP::UserAgent;
 use utf8;
 use namespace::clean;
 
+# Flags indicating which operations are needed to create a valid bag
 use constant {
-    FLAG_BAGIT        => 0x001 ,
-    FLAG_BAG_INFO     => 0x002 ,
-    FLAG_FETCH        => 0x004 ,
-    FLAG_DATA         => 0x008 , 
-    FLAG_TAG_MANIFEST => 0x016 ,
-    FLAG_MANIFEST     => 0x032 ,
-    FLAG_DIRTY        => 0x064 ,
+    FLAG_BAGIT        => 0x001 , # Flag indicates updating the bagit.txt file required
+    FLAG_BAG_INFO     => 0x002 , # Flag indicates updating the bag-info.txt file required
+    FLAG_FETCH        => 0x004 , # Flag indicates updating the fetch.txt file required
+    FLAG_DATA         => 0x008 , # Flag indicating new payload data available
+    FLAG_TAG_MANIFEST => 0x016 , # Flag indicates updateing tag-manifest-manifest.txt required
+    FLAG_MANIFEST     => 0x032 , # Flag indicates updating manifest-md5.txt required
+    FLAG_DIRTY        => 0x064 , # Flag indicates payload file that hasn't been serialized
 };
 
 with 'Catmandu::Logger';
 
+# Array containing all errors when reading/writing bags
 has '_error' => (
     is       => 'rw',
     default  => sub { [] },
 );
 
+# Integer containing a combinatation of FLAG_* set for this bag
 has 'dirty' => (
     is       => 'ro',
     writer   => '_dirty',
     default  => 0,
 );
 
+# Path to a directory containing a bag
 has 'path' => (
     is       => 'ro',
     writer   => '_path',
     init_arg => undef,
 );
 
+# Version number of the bag specification
 has 'version' => (
     is       => 'ro',
     writer   => '_version',
@@ -58,6 +63,7 @@ has 'version' => (
     init_arg => undef,
 );
 
+# Encoding of all tag manifests
 has 'encoding' => (
     is       => 'ro',
     writer   => '_encoding',
@@ -65,48 +71,56 @@ has 'encoding' => (
     init_arg => undef,
 );
 
+# User agent used to fetch payloads from the Internet
 has user_agent => (is => 'ro');
 
+# An array of a tag file names
 has '_tags' => (
     is       => 'rw',
     default  => sub { [] },
     init_arg => undef,
 );
 
+# An array of Catmandu::BagIt::Payloads
 has '_files' => (
     is       => 'rw',
     default  => sub { [] },
     init_arg => undef,
 );
 
+# An array of Catmandu::BagIt::Fetch
 has '_fetch' => (
     is       => 'rw',
     default  => sub { [] },
     init_arg => undef,
 );
 
+# A lookup hash of md5 checksums for the tag files
 has '_tag_sums' => (
     is       => 'rw',
     default  => sub { {} },
     init_arg => undef,
 );
 
+# A lookup hahs of md5 checksums for the payload files
 has '_sums' => (
     is       => 'rw',
     default  => sub { {} },
     init_arg => undef,
 );
 
+# An array of hashes of all name/value pairs in the bag-info.txt file
 has '_info' => (
     is       => 'rw',
     default  => sub { [] },
     init_arg => undef,
 );
 
+# The default implementation of the user_agent to fetch content online
 has _http_client => (
-    is => 'ro', 
-    lazy => 1, 
-    builder => '_build_http_client', 
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_http_client',
     init_arg => 'user_agent'
 );
 
@@ -117,38 +131,48 @@ sub _build_http_client {
     $ua;
 }
 
+# Settings requires when creating a new bag from scratch
 sub BUILD {
     my $self = shift;
 
     $self->log->debug("initializing bag");
 
+    # Intialize the in memory settings of the bag-info
     $self->_update_info;
+
+    # Initialize the in memory settings of the tag-manifests
     $self->_update_tag_manifest;
+
+    # Intialize the names of the basic tag files
     $self->_tags([qw(
             bagit.txt
             bag-info.txt
             manifest-md5.txt
             )]);
 
-
+    # Set this bag as dirty requiring an update of all the files
     $self->_dirty($self->dirty | FLAG_BAG_INFO | FLAG_TAG_MANIFEST | FLAG_DATA | FLAG_BAGIT);
 }
 
+# Return all the arrors as an array
 sub errors {
     my ($self) = @_;
     @{$self->_error};
 }
 
+# Return an array of tag file names
 sub list_tags {
     my ($self) = @_;
     @{$self->_tags};
 }
 
+# Return an array of all Catmandu::BagIt::Payload-s
 sub list_files {
     my ($self) = @_;
     @{$self->_files};
 }
 
+# Return a Catmandu::BagIt::Payload given a file name
 sub get_file {
     my ($self,$filename) = @_;
     die "usage: get_file(filename)" unless $filename;
@@ -159,6 +183,7 @@ sub get_file {
     return undef;
 }
 
+# Return a Catmandu::BagIt::Fetch given a file name
 sub get_fetch {
     my ($self,$filename) = @_;
     die "usage: get_fetch(filename)" unless $filename;
@@ -169,26 +194,32 @@ sub get_fetch {
     return undef;
 }
 
+# Return true when this bag is dirty
 sub is_dirty {
     my ($self) = @_;
     $self->dirty != 0;
 }
 
+# Return true when this bag is holey (and requires fetching data from the Internet
+# to be made complete)
 sub is_holey {
     my ($self) = @_;
     @{$self->_fetch} > 0;
 }
 
+# Return an array of Catmandu::BagIt::Fetch
 sub list_fetch {
     my ($self) = @_;
     @{$self->_fetch};
 }
 
+# Return an array of tag file
 sub list_tagsum {
     my ($self) = @_;
     keys %{$self->_tag_sums};
 }
 
+# Return the md5 checksum of a file
 sub get_tagsum {
     my ($self,$file) = @_;
 
@@ -197,11 +228,13 @@ sub get_tagsum {
     $self->_tag_sums->{$file};
 }
 
+# Return an array of payload files
 sub list_checksum {
     my ($self) = @_;
     keys %{$self->_sums};
 }
 
+# Return the md5 checksum of of a file name
 sub get_checksum {
     my ($self,$file) = @_;
 
@@ -210,6 +243,7 @@ sub get_checksum {
     $self->_sums->{$file};
 }
 
+# Read the content of a bag
 sub read {
     my ($class,$path) = @_;
 
@@ -242,6 +276,7 @@ sub read {
     $ok == 7 ? $self : undef;
 }
 
+# Write the content of a bag back to disk
 sub write {
     my ($self,$path,%opts) = @_;
 
@@ -250,8 +285,8 @@ sub write {
     die "usage: write(path[, overwrite => 1])" unless $path;
 
     # Check if other processes are writing or previous processes died
-    if ( 
-        (defined($self->path) && -f $self->path . "/.lock") || 
+    if (
+        (defined($self->path) && -f $self->path . "/.lock") ||
         -f "$path/.lock"
        ) {
         $self->log->error($self->path . "/.lock or $path/.lock exists");
@@ -260,9 +295,11 @@ sub write {
     }
 
     if (defined($self->path) && $path ne $self->path) {
+        # If the bag is copied from to a new location than all the tag files and
+        # files should be flagged as dirty and need to be overwritten
         $self->log->info("copying from old path: " . $self->path);
         $self->_dirty($self->dirty | FLAG_BAGIT | FLAG_BAG_INFO | FLAG_TAG_MANIFEST | FLAG_MANIFEST | FLAG_DATA);
-        
+
         foreach my $item ($self->list_files) {
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
@@ -272,6 +309,7 @@ sub write {
         # updates are possible when overwrite => 1
     }
     elsif ($opts{overwrite} && -d $path) {
+        # Remove existing bags
         $self->log->info("removing: $path");
         remove_tree($path);
     }
@@ -340,7 +378,7 @@ sub touch {
 sub add_file {
     my ($self, $filename, $data, %opts) = @_;
 
-    die "usage: add_file(filename, data [, overwrite => 1])" 
+    die "usage: add_file(filename, data [, overwrite => 1])"
             unless defined($filename) && defined($data);
 
     $self->_error([]);
@@ -364,7 +402,7 @@ sub add_file {
     }
 
     push @{ $self->_files } , Catmandu::BagIt::Payload->new(
-                                    filename => $filename , 
+                                    filename => $filename ,
                                     data => $data ,
                                     flag => FLAG_DIRTY ,
                                 );
@@ -422,7 +460,7 @@ sub remove_file {
 sub add_fetch {
     my ($self, $url, $size, $filename) = @_;
 
-    die "usage add_fetch(url,size,filename)" 
+    die "usage add_fetch(url,size,filename)"
             unless defined($url) && $size =~ /^\d+$/ && defined($filename);
 
     die "illegal file name $filename"
@@ -447,7 +485,7 @@ sub add_fetch {
 sub remove_fetch {
     my ($self, $filename) = @_;
 
-    die "usage remove_fetch(filename)" unless defined($filename);  
+    die "usage remove_fetch(filename)" unless defined($filename);
 
     $self->log->info("removing fetch for $filename");
 
@@ -473,7 +511,7 @@ sub mirror_fetch {
 
     my $url       = $fetch->url;
     my $filename  = $fetch->filename;
-    my $path      = $self->path;  
+    my $path      = $self->path;
 
     $self->log->info("mirroring $url -> $tmp_filename...");
 
@@ -495,8 +533,8 @@ sub mirror_fetch {
 sub add_info {
     my ($self,$name,$values) = @_;
 
-    die "usage add_info(name,values)" 
-            unless defined($name) && defined($values);  
+    die "usage add_info(name,values)"
+            unless defined($name) && defined($values);
 
     if ($name =~ /^(Bag-Size|Bagging-Date|Payload-Oxum)$/) {
         for my $part (@{$self->_info}) {
@@ -530,20 +568,20 @@ sub add_info {
 sub remove_info {
     my ($self,$name) = @_;
 
-    die "usage remove_info(name)" 
-            unless defined($name); 
+    die "usage remove_info(name)"
+            unless defined($name);
 
     if ($name =~ /^(Bag-Size|Bagging-Date|Payload-Oxum)$/) {
         $self->log->error("removing info $name - is read-only");
         return undef;
-    } 
+    }
 
     $self->log->info("removing info $name");
 
     my (@old) = grep { $_->[0] ne $name } @{$self->_info};
 
     $self->_info(\@old);
-    
+
     $self->_update_tag_manifest;
 
     $self->_dirty($self->dirty | FLAG_BAG_INFO | FLAG_TAG_MANIFEST);
@@ -866,7 +904,7 @@ sub _read_tags {
     $self->_tags([]);
 
     local(*F);
-    
+
     open(F,"find $path -maxdepth 1 -type f |") || die "can't find tag-files";
 
     while(<F>) {
@@ -877,7 +915,7 @@ sub _read_tags {
 
         push @{ $self->_tags } , $_;
     }
-    
+
     close(F);
 
     1;
@@ -1053,13 +1091,16 @@ sub _baginfo_as_string {
     $str;
 }
 
+# Write BagIt data payloads to disk
 sub _write_data {
     my ($self,$path) = @_;
 
+    # Return immediately when no files need to be written
     return 1 unless $self->dirty & FLAG_DATA;
 
     $self->log->info("writing the data files");
 
+    # Create a data/ directory for payloads
     unless (-d "$path/data") {
         unless (mkdir "$path/data") {
             $self->log->error("can't create payload directory $path/data: $!");
@@ -1068,21 +1109,29 @@ sub _write_data {
         }
     }
 
+    # Create a list of all files written to the payload directory
+    # Compare this list later with files found in the payload directory
+    # This difference are the files that can be deleted
     my @all_names_in_bag = ();
 
     foreach my $item ($self->list_files) {
         my $filename = 'data/' . $item->{filename};
         push @all_names_in_bag , $filename;
 
+        # Only process files that are dirty
         next unless $item->flag & FLAG_DIRTY;
 
+        # Check for deep directories that need to be stored
         my $dir  = $filename; $dir =~ s/\/[^\/]+$//;
 
         $self->log->info("serializing $filename");
 
         mkpath("$path/$dir") unless -d "$path/$dir";
 
+        # Write the data to disk
         if ($item->is_io) {
+            # If the data is an IO::File seek to the start of the
+            # file and copy the data
             $item->fh->seek(0,0) if $item->data->can('seek');
             eval {
                 copy($item->fh, "$path/$filename");
@@ -1094,26 +1143,27 @@ sub _write_data {
             }
             # Close the old handle
             $item->fh->close();
-            # Reopen the file at the new position
+            # Reopen the file for reading at the new position
             $item->{data} = IO::File->new("$path/$filename");
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
         else {
+            # If the file is a text string write dump it to disk
             write_text("$path/$filename", $item->data);
             $item->flag($item->flag ^ FLAG_DIRTY);
         }
     }
 
-    # Check deleted files
+    # Check deleted files. Delete all files not in the @all_names_in_bag list
     local(*F);
-    
+
     if (open(F,"find $path/data -type f |")) {
         while(my $file = <F>) {
             chomp($file);
-            
+
             my $filename = $file;
             $filename =~ s/^$path\///;
- 
+
             unless (grep {$filename eq $_} @all_names_in_bag) {
                 $self->log->info("deleting $path/$filename");
                 unlink "$path/$filename";
@@ -1231,8 +1281,8 @@ sub _write_tag_manifest {
     local (*F);
 
     unless (open(F,">:utf8", "$path/tag-manifest-md5.txt")) {
-        $self->log->error("can't create $path/manifest-md5.txt: $!");
-        $self->_push_error("can't create $path/manifest-md5.txt: $!");
+        $self->log->error("can't create $path/tag-manifest-md5.txt: $!");
+        $self->_push_error("can't create $path/tag-manifest-md5.txt: $!");
         return;
     }
 
@@ -1336,20 +1386,20 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     printf "tags:\n";
     for my $tag ($bagit->list_info_tags) {
         my @values = $bagit->get_info($tag);
-        printf " $tag: %s\n" , join(", ",@values); 
+        printf " $tag: %s\n" , join(", ",@values);
     }
 
     printf "tag-sums:\n";
     for my $file ($bagit->list_tagsum) {
         my $sum = $bagit->get_tagsum($file);
-        printf " $file: %s\n" , $sum; 
+        printf " $file: %s\n" , $sum;
     }
 
     # Read the file listing as found in the manifest file
     printf "file-sums:\n";
     for my $file ($bagit->list_checksum) {
         my $sum = $bagit->get_checksum($file);
-        printf " $file: %s\n" , $sum; 
+        printf " $file: %s\n" , $sum;
     }
 
     # Read the real listing of files as found on the disk
@@ -1456,7 +1506,7 @@ Return the encoding of the BagIt.
 
 =head2 size()
 
-Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus 
+Return a human readble string of the expected size of the BagIt (adding the actual sizes found on disk plus
 the files that need to be fetched from the network).
 
 =head2 payload_oxum()
@@ -1473,7 +1523,7 @@ Return true when the BagIt contains a non emtpy fetch configuration.
 
 =head2 is_error()
 
-Return an ARRAY of errors when checking complete, valid and write. 
+Return an ARRAY of errors when checking complete, valid and write.
 
 =head2 complete()
 
@@ -1499,7 +1549,7 @@ Remove an info $tag.
 
 =head2 get_info($tag, [$delim])
 
-Return an ARRAY of values found for the $tag name. Or, in scalar context, return a string of 
+Return an ARRAY of values found for the $tag name. Or, in scalar context, return a string of
 all values optionally delimeted by $delim.
 
 =head2 list_tagsum()

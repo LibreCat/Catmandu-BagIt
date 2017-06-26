@@ -5,8 +5,8 @@ use IO::String;
 our $VERSION = '0.12';
 
 has 'filename' => (is => 'ro');
-has 'data' => (is => 'ro');
-has 'flag' => (is => 'rw', default => 0);
+has 'data'     => (is => 'ro');
+has 'flag'     => (is => 'rw', default => 0);
 
 sub is_io {
     my $self = shift;
