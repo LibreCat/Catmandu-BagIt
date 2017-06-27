@@ -33,6 +33,8 @@ sub from_io {
 
     my $inst = $class->new(filename => $filename, path => "$tempfile");
 
+    # Flag the file as new so that we know the temporary files need
+    # to be moved to a new location later
     $inst->{is_new} = 1;
 
     return $inst;
@@ -47,6 +49,8 @@ sub from_string {
 
     my $inst = $class->new(filename => $filename, path => "$tempfile");
 
+    # Flag the file as new so that we know the temporary files need
+    # to be moved to a new location later
     $inst->{is_new} = 1;
 
     return $inst;

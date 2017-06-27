@@ -416,7 +416,13 @@ sub add_file {
 
     push @{ $self->_files }, $payload;
 
-    my $sum = $self->_md5_sum($data);
+    my $fh = $payload->open;
+
+    binmode($fh,":raw");
+
+    my $sum = $self->_md5_sum($fh);
+
+    close($fh);
 
     $self->_sums->{"$filename"} = $sum;
 
@@ -715,7 +721,7 @@ sub valid {
             return (0,"can't read $file");
         }
 
-        binmode($fh);
+        binmode($fh,':raw');
 
         my $md5_check = $self->_md5_sum($fh);
 
@@ -1252,11 +1258,14 @@ sub _md5_sum {
     elsif (! ref $data) {
         return $ctx->add(Encode::encode_utf8($data))->hexdigest;
     }
-    elsif (ref $data eq 'SCALAR') {
+    elsif (ref($data) eq 'SCALAR') {
         return $ctx->add(Encode::encode_utf8($$data))->hexdigest;
     }
-    else {
+    elsif (ref($data) =~ /^IO/) {
         return $ctx->addfile($data)->hexdigest;
+    }
+    else {
+        die "unknown data type: `" . ref($data) . "`";
     }
 }
 
