@@ -366,10 +366,8 @@ sub touch {
 
     die "usage: touch(path)"
             unless defined($path);
-    local(*F);
-    open(F,">$path") || die "failed to open $path for writing: $!";
-    print F "";
-    close(F);
+
+    path("$path")->spew("");
 
     1;
 }
@@ -1013,16 +1011,7 @@ sub _write_bagit {
 
     $self->log->info("writing the version file");
 
-    local (*F);
-    unless (open(F,">:utf8" , "$path/bagit.txt")) {
-        $self->log->error("can't create $path/bagit.txt: $!");
-        $self->_push_error("can't create $path/bagit.txt: $!");
-        return;
-    }
-
-    printf F $self->_bagit_as_string;
-
-    close (F);
+    path("$path/bagit.txt")->spew_utf8($self->_bagit_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_BAGIT);
 
@@ -1048,17 +1037,7 @@ sub _write_info {
 
     $self->log->info("writing the tag info file");
 
-    local(*F);
-
-    unless (open(F,">:utf8", "$path/bag-info.txt")) {
-        $self->log->error("can't create $path/bag-info.txt: $!");
-        $self->_push_error("can't create $path/bag-info.txt: $!");
-        return;
-    }
-
-    print F $self->_baginfo_as_string;
-
-    close(F);
+    path("$path/bag-info.txt")->spew_utf8($self->_baginfo_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_BAG_INFO);
 
@@ -1190,17 +1169,7 @@ sub _write_fetch {
         return 1;
     }
 
-    local(*F);
-
-    unless (open(F,">:utf8", "$path/fetch.txt")) {
-        $self->log->error("can't create $path/fetch.txt: $!");
-        $self->_push_error("can't create $path/fetch.txt: $!");
-        return;
-    }
-
-    print F $fetch_str;
-
-    close (F);
+    path("$path/fetch.txt")->spew_utf8($fetch_str);
 
     $self->_dirty($self->dirty ^ FLAG_FETCH);
 
@@ -1226,17 +1195,7 @@ sub _write_manifest {
 
     $self->log->info("writing the manifest file");
 
-    local (*F);
-
-    unless (open(F,">:utf8", "$path/manifest-md5.txt")) {
-        $self->log->error("can't create $path/manifest-md5.txt: $!");
-        $self->_push_error("can't create $path/manifest-md5.txt: $!");
-        return;
-    }
-
-    print F $self->_manifest_as_string;
-
-    close(F);
+    path("$path/manifest-md5.txt")->spew_utf8($self->_manifest_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_MANIFEST);
 
@@ -1270,17 +1229,7 @@ sub _write_tag_manifest {
 
     $self->log->info("writing the tag manifest file");
 
-    local (*F);
-
-    unless (open(F,">:utf8", "$path/tag-manifest-md5.txt")) {
-        $self->log->error("can't create $path/tag-manifest-md5.txt: $!");
-        $self->_push_error("can't create $path/tag-manifest-md5.txt: $!");
-        return;
-    }
-
-    print F $self->_tag_manifest_as_string;
-
-    close(F);
+    path("$path/tag-manifest-md5.txt")->spew_utf8($self->_tag_manifest_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_MANIFEST);
 
@@ -1294,7 +1243,7 @@ sub _tag_manifest_as_string {
 
     foreach my $file ($self->list_tagsum) {
         my $md5  = $self->get_tagsum($file);
-        print F "$md5 $file\n";
+        $str .= "$md5 $file\n";
     }
 
     $str;
@@ -1306,7 +1255,7 @@ sub _md5_sum {
     my $ctx = Digest::MD5->new;
 
     if (!defined $data) {
-    return $ctx->add(Encode::encode_utf8(''))->hexdigest;
+        return $ctx->add(Encode::encode_utf8(''))->hexdigest;
     }
     elsif (! ref $data) {
         return $ctx->add(Encode::encode_utf8($data))->hexdigest;
