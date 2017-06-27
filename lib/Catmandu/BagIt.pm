@@ -12,9 +12,8 @@ use IO::File qw();
 use IO::Handle qw();
 use File::Copy;
 use List::MoreUtils qw(first_index uniq);
-use File::Path qw(remove_tree mkpath);
 use Path::Tiny;
-use File::Temp qw(tempfile);
+use Path::Iterator::Rule;
 use Catmandu::BagIt::Payload;
 use Catmandu::BagIt::Fetch;
 use POSIX qw(strftime);
@@ -311,7 +310,7 @@ sub write {
     elsif ($opts{overwrite} && -d $path) {
         # Remove existing bags
         $self->log->info("removing: $path");
-        remove_tree($path);
+        path($path)->remove_tree;
     }
 
     if (-f "$path/bagit.txt") {
@@ -326,7 +325,7 @@ sub write {
     }
     else {
         $self->log->info("creating: $path");
-        mkpath($path);
+        path($path)->mkpath;
         $self->_dirty($self->dirty | FLAG_BAGIT);
     }
 
@@ -507,7 +506,7 @@ sub mirror_fetch {
     die "usage mirror_fetch(<Catmandu::BagIt::Fetch>)"
             unless defined($fetch) && ref($fetch) && ref($fetch) =~ /^Catmandu::BagIt::Fetch/;
 
-    my ($tmp_fh, $tmp_filename) = tempfile();
+    my $tmp_filename = Path::Tiny->tempfile;
 
     my $url       = $fetch->url;
     my $filename  = $fetch->filename;
@@ -903,20 +902,18 @@ sub _read_tags {
 
     $self->_tags([]);
 
-    local(*F);
+    my $rule = Path::Iterator::Rule->new;
+    $rule->max_depth(1);
+    $rule->file;
+    my $iter = $rule->iter($path);
 
-    open(F,"find $path -maxdepth 1 -type f |") || die "can't find tag-files";
+    while(my $file = $iter->()) {
+        $file =~ s/^$path.//;
 
-    while(<F>) {
-        chomp($_);
-        $_ =~ s/^$path.//;
+        next if $file =~ /^tagmanifest-\w+.txt$/;
 
-        next if $_ =~ /^tagmanifest-\w+.txt$/;
-
-        push @{ $self->_tags } , $_;
+        push @{ $self->_tags } , $file;
     }
-
-    close(F);
 
     1;
 }
@@ -934,19 +931,17 @@ sub _read_files {
         return 1;
     }
 
-    local(*F);
-    open(F,"find $path/data -type f |") || die "payload directory doesn't contain files";
+    my $rule = Path::Iterator::Rule->new;
+    $rule->file;
+    my $iter = $rule->iter("$path/data");
 
-    while(my $file = <F>) {
-        chomp($file);
+    while(my $file = $iter->()) {
         my $filename = $file;
         $filename =~ s/^$path\/data\///;
         my $data = IO::File->new($file);
 
         push @{ $self->_files } , Catmandu::BagIt::Payload->new(filename => $filename, data => $data);
     }
-
-    close(F);
 
     1;
 }
@@ -1126,7 +1121,7 @@ sub _write_data {
 
         $self->log->info("serializing $filename");
 
-        mkpath("$path/$dir") unless -d "$path/$dir";
+        path("$path/$dir")->mkpath unless -d "$path/$dir";
 
         # Write the data to disk
         if ($item->is_io) {
@@ -1155,21 +1150,18 @@ sub _write_data {
     }
 
     # Check deleted files. Delete all files not in the @all_names_in_bag list
-    local(*F);
+    my $rule = Path::Iterator::Rule->new;
+    $rule->file;
+    my $iter = $rule->iter("$path/data");
 
-    if (open(F,"find $path/data -type f |")) {
-        while(my $file = <F>) {
-            chomp($file);
+    while(my $file = $iter->()) {
+        my $filename = $file;
+        $filename =~ s/^$path\///;
 
-            my $filename = $file;
-            $filename =~ s/^$path\///;
-
-            unless (grep {$filename eq $_} @all_names_in_bag) {
-                $self->log->info("deleting $path/$filename");
-                unlink "$path/$filename";
-            }
+        unless (grep {$filename eq $_} @all_names_in_bag) {
+            $self->log->info("deleting $path/$filename");
+            unlink "$path/$filename";
         }
-        close(F);
     }
 
     $self->_dirty($self->dirty ^ FLAG_DATA);
