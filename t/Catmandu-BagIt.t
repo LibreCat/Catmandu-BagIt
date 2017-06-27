@@ -126,9 +126,8 @@ note("files");
     ok @files == 1 , 'count 1 file';
 
     is $files[0]->filename   , 'test1.txt' , 'file->filename';
-    ok !$files[0]->is_io , 'file->is_io failes';
-    is $files[0]->data   , 'abcdefghijklmnopqrstuvwxyz' , 'file->data';
-    is ref($files[0]->fh) , 'IO::String', 'file->fh blessed';
+    is path($files[0]->path)->slurp_utf8 , 'abcdefghijklmnopqrstuvwxyz' , 'file->data';
+    is ref($files[0]->open) , 'IO::File', 'file->fh blessed';
 
     ok ! $bagit->remove_file("testxxx.txt") , 'remove_file that does not exist failes';
     ok $bagit->remove_file("test1.txt") , 'remove_file';
@@ -140,7 +139,7 @@ note("files");
 
     ok $bagit->add_file("日本.txt","日本") , 'add_file utf8';
 
-    is [$bagit->list_files]->[0]->data , '日本' , 'utf8 data test';
+    is path([$bagit->list_files]->[0]->path)->slurp_utf8 , '日本' , 'utf8 data test';
 
     ok $bagit->remove_file("日本.txt") , 'remove_file';
 
@@ -148,7 +147,7 @@ note("files");
 
     my $file = [ $bagit->list_files ]->[0];
 
-    is ref($file->fh) , 'IO::File' , 'file->fh is IO::File';
+    is ref($file->open) , 'IO::File' , 'file->fh is IO::File';
 }
 
 note("fetch");
@@ -219,7 +218,7 @@ note("reading operations demo01 (valid bag)");
 
     is ref($file)  , 'Catmandu::BagIt::Payload' , 'file is a payload';
     is $file->filename , 'Catmandu-0.9204.tar.gz' , 'file->filename';
-    is ref($file->fh) , 'IO::File' , 'file->fh';
+    is ref($file->open) , 'IO::File' , 'file->fh';
     is $bagit->get_checksum($file->filename) , 'c8accb44741272d63f6e0d72f34b0fde' , 'get_checksum';
 
     my @checksums = $bagit->list_checksum;
@@ -398,8 +397,6 @@ note("update bag");
 
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
 
-    ok !$fh->opened , 'file handle open closed';
-
     ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
     ok -f "t/my-bag/data/poem.txt" , 'got a t/my-bag/data/poem.txt';
 
@@ -452,7 +449,7 @@ note("lock");
 {
     my $bagit = Catmandu::BagIt->read("bags/demo03");
 
-    ok ! $bagit->locked , '! locked';
+    ok ! $bagit->locked , '!locked';
 
     $bagit = Catmandu::BagIt->new;
 

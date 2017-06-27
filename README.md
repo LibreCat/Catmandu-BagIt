@@ -47,18 +47,20 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     # Read the real listing of files as found on the disk
     printf "files:\n";
     for my $file ($bagit->list_files) {
-        my $stat = [$file->data->stat];
+        my $stat = [$file->path];
         printf " name: %s\n", $file->filename;
         printf " size: %s\n", $stat->[7];
         printf " last-mod: %s\n", scalar(localtime($stat->[9]));
     }
 
     my $file = $bagit->get_file("mydata.txt");
-    my $fh   = $file->fh;
+    my $fh   = $file->open;
 
     while (<$fh>) {
        ....
     }
+
+    close($fh);
 
     print "dirty?\n" if $bagit->is_dirty;
 

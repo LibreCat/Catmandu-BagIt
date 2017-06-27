@@ -345,11 +345,24 @@ sub write {
     $ok += $self->_write_manifest($path);
     $ok += $self->_write_tag_manifest($path);
 
+    return undef unless $ok == 6;
+
     $self->_dirty(0);
 
     unlink("$path/.lock");
 
-    $ok == 6;
+    $ok = 0;
+
+    # Reread the contents of the bag
+    $ok += $self->_read_version($path);
+    $ok += $self->_read_info($path);
+    $ok += $self->_read_tag_manifest($path);
+    $ok += $self->_read_manifest($path);
+    $ok += $self->_read_tags($path);
+    $ok += $self->_read_files($path);
+    $ok += $self->_read_fetch($path);
+
+    $ok == 7;
 }
 
 sub locked {
@@ -398,11 +411,10 @@ sub add_file {
         return;
     }
 
-    push @{ $self->_files } , Catmandu::BagIt::Payload->new(
-                                    filename => $filename ,
-                                    data => $data ,
-                                    flag => FLAG_DIRTY ,
-                                );
+    my $payload = Catmandu::BagIt::Payload->from_any($filename,$data);
+    $payload->flag(FLAG_DIRTY);
+
+    push @{ $self->_files }, $payload;
 
     my $sum = $self->_md5_sum($data);
 
@@ -489,10 +501,8 @@ sub remove_fetch {
     my (@old) = grep { $_->filename ne $filename} @{$self->_fetch};
 
     $self->_fetch(\@old);
-
     $self->_update_info;
     $self->_update_tag_manifest;
-
     $self->_dirty($self->dirty | FLAG_FETCH | FLAG_TAG_MANIFEST);
 
     1;
@@ -761,14 +771,10 @@ sub _size {
 
     my $total = 0;
 
-    foreach my $item ($self->list_files) {
-        my $size;
-        if ($item->is_io && $item->data->can('stat')) {
-            $size = [ $item->data->stat ]->[7];
-        }
-        else {
-            $size = length($item->data);
-        }
+    foreach my $file ($self->list_files) {
+        my $fh   = $file->open;
+        my $size = [ $fh->stat ]->[7];
+        $fh->close;
         $total += $size;
     }
 
@@ -936,9 +942,8 @@ sub _read_files {
     while(my $file = $iter->()) {
         my $filename = $file;
         $filename =~ s/^$path\/data\///;
-        my $data = IO::File->new($file);
-
-        push @{ $self->_files } , Catmandu::BagIt::Payload->new(filename => $filename, data => $data);
+        my $payload = Catmandu::BagIt::Payload->new(filename => $filename, path => $file);
+        push @{ $self->_files } , $payload;
     }
 
     1;
@@ -1102,30 +1107,17 @@ sub _write_data {
 
         path("$path/$dir")->mkpath unless -d "$path/$dir";
 
-        # Write the data to disk
-        if ($item->is_io) {
-            # If the data is an IO::File seek to the start of the
-            # file and copy the data
-            $item->fh->seek(0,0) if $item->data->can('seek');
-            eval {
-                copy($item->fh, "$path/$filename");
-            };
-            if ($@) {
-                if ($@ =~ /are identical/) {
-                    $self->log->error("attempy to copy identical files");
-                }
-            }
-            # Close the old handle
-            $item->fh->close();
-            # Reopen the file for reading at the new position
-            $item->{data} = IO::File->new("$path/$filename");
-            $item->flag($item->flag ^ FLAG_DIRTY);
+        my $old_path = $item->path;
+        my $new_path = "$path/$filename";
+
+        if ($item->is_new) {
+            path($old_path)->move($new_path);
         }
         else {
-            # If the file is a text string write dump it to disk
-            path("$path/$filename")->spew_utf8($item->data);
-            $item->flag($item->flag ^ FLAG_DIRTY);
+            path($old_path)->copy($new_path);
         }
+
+        $item->flag($item->flag ^ FLAG_DIRTY);
     }
 
     # Check deleted files. Delete all files not in the @all_names_in_bag list
@@ -1276,17 +1268,6 @@ sub _is_legal_file_name {
     return 1;
 }
 
-sub DESTROY {
-    my ($self) = @_;
-
-    # Closing open file handles
-    foreach my $item ($self->list_files) {
-        if ($item->is_io && $item->fh->opened) {
-            $item->fh->close;
-        }
-    }
-}
-
 1;
 
 __END__
@@ -1346,18 +1327,20 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     # Read the real listing of files as found on the disk
     printf "files:\n";
     for my $file ($bagit->list_files) {
-        my $stat = [$file->data->stat];
+        my $stat = [$file->path];
         printf " name: %s\n", $file->filename;
         printf " size: %s\n", $stat->[7];
         printf " last-mod: %s\n", scalar(localtime($stat->[9]));
     }
 
     my $file = $bagit->get_file("mydata.txt");
-    my $fh   = $file->fh;
+    my $fh   = $file->open;
 
     while (<$fh>) {
        ....
     }
+
+    close($fh);
 
     print "dirty?\n" if $bagit->is_dirty;
 
