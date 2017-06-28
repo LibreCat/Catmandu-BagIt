@@ -7,6 +7,7 @@ use Test::Exception;
 use Digest::MD5;
 use IO::File;
 use IO::Handle;
+use IO::Pipe;
 use POSIX qw(strftime);
 use File::Path qw(remove_tree);
 use Path::Tiny;
@@ -238,7 +239,7 @@ note("reading operations demo01 (valid bag)");
     is ref($file->open) , 'IO::File' , 'file->fh';
 
     dies_ok { $bagit->get_checksum } "get_checksum without parameters";
-    
+
     is $bagit->get_checksum($file->filename) , 'c8accb44741272d63f6e0d72f34b0fde' , 'get_checksum';
 
     my @checksums = $bagit->list_checksum;
@@ -418,13 +419,22 @@ note("update bag");
 
     ok $bagit->add_file("poem.txt",$fh) , 'add_file(IO::File)';
 
+    ok $bagit->add_file("results.txt", sub {
+        my $io = shift;
+        for (0..9) {
+            $io->print($_);
+        }
+    });
+
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
 
     ok -f "t/my-bag/data/test.txt" , 'got a t/my-bag/data/test.txt';
     ok -f "t/my-bag/data/poem.txt" , 'got a t/my-bag/data/poem.txt';
+    ok -f "t/my-bag/data/results.txt" , 'got a t/my-bag/data/results.txt';
 
     like path("t/my-bag/data/test.txt")->slurp_utf8 , qr/test789/, 'file content is correct';
     like path("t/my-bag/data/poem.txt")->slurp_utf8 , qr/Violets are blue/ , 'file content is correct';
+    like path("t/my-bag/data/results.txt")->slurp_utf8 , qr/0123456789/ , 'file content is correct';
 
     ok $bagit->add_file("poem.txt",IO::File->new("t/poem2.txt"), overwrite => 1) , 'setting new file content';
 
@@ -434,13 +444,13 @@ note("update bag");
 
     my $payload_oxum = $bagit->payload_oxum;
 
-    is $payload_oxum , '208.2' , 'payload oxum';
+    is $payload_oxum , '218.3' , 'payload oxum';
 
     ok $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt") , 'adding payload';
 
     $payload_oxum = $bagit->payload_oxum;
 
-    is $payload_oxum , '290208.3' , 'new payload oxum reflects the fetch file';
+    is $payload_oxum , '290218.4' , 'new payload oxum reflects the fetch file';
 
     remove_path("t/my-bag");
 }
@@ -489,6 +499,36 @@ note("lock");
     ok $bagit->locked , 'locked';
 
     remove_path("t/my-bag");
+}
+
+note("pipe");
+{
+    my $pipe = new IO::Pipe;
+
+    if(my $pid = fork()) { # Parent
+        $pipe->reader();
+
+        my $bagit = Catmandu::BagIt->new;
+
+        ok $bagit->add_file("test.txt",$pipe) , 'add_file() pipe';
+
+        ok $bagit->write("t/my-bag") , 'write()';
+
+        my $file = $bagit->get_file("test.txt");
+
+        ok $file;
+
+        is path($file->path)->slurp_utf8 , "Hello, parent!\n" , 'file->data';
+
+        remove_path("t/my-bag");
+    }
+    elsif(defined $pid) { # Child
+        $pipe->writer();
+
+        print $pipe "Hello, parent!\n";
+
+        exit(0);
+    }
 }
 
 done_testing;

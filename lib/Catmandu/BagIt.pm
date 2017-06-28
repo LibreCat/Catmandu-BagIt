@@ -1505,6 +1505,8 @@ Get a Catmandu::BagIt::Payload object for the file $filename.
 
 =head2 add_file($filename, IO::File->new(...))
 
+=head2 add_file($filaname, sub { my $io = shift; .... })
+
 Add a new file to the BagIt.
 
 =head2 remove_file($filename)
