@@ -725,7 +725,7 @@ sub valid {
 
         my $md5_check = $self->_md5_sum($fh);
 
-        undef $fh;
+        close($fh);
 
         unless ($md5 eq $md5_check) {
             $self->log->error("$file checksum fails $md5 <> $md5_check");
@@ -1117,10 +1117,10 @@ sub _write_data {
         my $new_path = "$path/$filename";
 
         if ($item->is_new) {
-            path($old_path)->move($new_path);
+            File::Copy::move($old_path,$new_path);
         }
         else {
-            path($old_path)->copy($new_path);
+            File::Copy::copy($old_path,$new_path);
         }
 
         $item->flag($item->flag ^ FLAG_DIRTY);
