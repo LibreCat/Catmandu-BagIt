@@ -135,7 +135,7 @@ sub add {
 
             # For now using a simplistic mirror operation
             my $fname = $tmp->filename;
-            my $response = $bagit->_http_client->mirror($url,$fname);
+            my $response = $bagit->user_agent->mirror($url,$fname);
 
             unless ($response->is_success) {
                 Catmandu::Error->throw("failed to mirror $url to $fname : " . $response->status_line);

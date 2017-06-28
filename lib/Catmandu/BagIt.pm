@@ -71,7 +71,7 @@ has 'encoding' => (
 );
 
 # User agent used to fetch payloads from the Internet
-has user_agent => (is => 'ro');
+has user_agent => (is => 'lazy');
 
 # An array of a tag file names
 has '_tags' => (
@@ -115,15 +115,7 @@ has '_info' => (
     init_arg => undef,
 );
 
-# The default implementation of the user_agent to fetch content online
-has _http_client => (
-    is => 'ro',
-    lazy => 1,
-    builder => '_build_http_client',
-    init_arg => 'user_agent'
-);
-
-sub _build_http_client {
+sub _build_user_agent {
     my ($self) = @_;
     my $ua = LWP::UserAgent->new;
     $ua->agent('Catmandu-BagIt/' . $Catmandu::BagIt::VERSION);
@@ -528,7 +520,7 @@ sub mirror_fetch {
 
     $self->log->info("mirroring $url -> $tmp_filename...");
 
-    my $response = $self->_http_client->mirror($url,$tmp_filename);
+    my $response = $self->user_agent->mirror($url,$tmp_filename);
 
     if ($response->is_success) {
         $self->log->info("mirror is a success");

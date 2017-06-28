@@ -39,6 +39,7 @@ note("basic metadata");
     is $bagit->size , '0.000 KB' , 'size';
     is $bagit->payload_oxum , '0.0' , 'payload_oxum';
     ok $bagit->dirty , 'bag is dirty';
+    is ref($bagit->user_agent) , 'LWP::UserAgent' , 'got a user_agent';
 }
 
 note("info");
@@ -82,6 +83,8 @@ note("tag-sums");
 BagIt-Version: 0.97
 Tag-File-Character-Encoding: UTF-8
 EOF
+
+    dies_ok { $bagit->get_tagsum() } 'get_tagsum without parameters dies';
 
     is $bagit->get_tagsum('bagit.txt') , Digest::MD5::md5_hex($bagit_txt) , 'get_tagsum(bagit.txt)';
 
@@ -141,11 +144,21 @@ note("files");
 
     is path([$bagit->list_files]->[0]->path)->slurp_utf8 , '日本' , 'utf8 data test';
 
+    dies_ok { $bagit->get_file() } "get_file without parameters";
+
+    my $file = $bagit->get_file("日本.txt");
+
+    ok $file, 'get_file()';
+
+    is path($file->path)->slurp_utf8 , '日本' , 'utf8 data test';
+
+    ok ! $bagit->get_file("日本123.txt") , 'get_file() non existing';
+
     ok $bagit->remove_file("日本.txt") , 'remove_file';
 
     ok $bagit->add_file('LICENSE', IO::File->new("LICENSE")) , 'add_file(IO::File)';
 
-    my $file = [ $bagit->list_files ]->[0];
+    $file = [ $bagit->list_files ]->[0];
 
     is ref($file->open) , 'IO::File' , 'file->fh is IO::File';
 }
@@ -192,6 +205,10 @@ note("complete & valid");
 
 note("reading operations demo01 (valid bag)");
 {
+    dies_ok { Catmandu::BagIt->read() } "read without parameters dies";
+
+    ok ! Catmandu::BagIt->read("bag/123123123") , "read on non-existing returned undef";
+
     my $bagit = Catmandu::BagIt->read("bags/demo01");
 
     ok $bagit , 'read(bags/demo01)';
@@ -219,6 +236,9 @@ note("reading operations demo01 (valid bag)");
     is ref($file)  , 'Catmandu::BagIt::Payload' , 'file is a payload';
     is $file->filename , 'Catmandu-0.9204.tar.gz' , 'file->filename';
     is ref($file->open) , 'IO::File' , 'file->fh';
+
+    dies_ok { $bagit->get_checksum } "get_checksum without parameters";
+    
     is $bagit->get_checksum($file->filename) , 'c8accb44741272d63f6e0d72f34b0fde' , 'get_checksum';
 
     my @checksums = $bagit->list_checksum;
@@ -306,6 +326,9 @@ note("write to disk");
     ok $bagit , 'new';
 
     ok $bagit->is_dirty, 'bag is dirty';
+
+    dies_ok { $bagit->write() } "write() without parameters dies";
+
     ok $bagit->write("t/my-bag") , 'write(t/my-bag)';
     ok $bagit->complete, 'bag is now complete';
     ok $bagit->valid , 'bag is now valid';
@@ -428,7 +451,13 @@ note("mirror fetch");
 
     $bagit->add_fetch("http://demo.org/","65","poem.txt");
 
+    dies_ok { $bagit->get_fetch() } 'get_fetch without parameters dies';
+
+    ok ! $bagit->get_fetch("poem123.txt") , 'get_fetch() on non-existing';
+
     my $fetch = $bagit->get_fetch("poem.txt");
+
+    ok $fetch , 'get_fetch()';
 
     ok $bagit->write("t/my-bag", overwrite => 1) , 'write bag overwrite';
 
