@@ -340,7 +340,7 @@ note("write to disk");
     ok -f "t/my-bag/bagit.txt" , "got a t/my-bag/bagit.txt";
     ok -f "t/my-bag/bag-info.txt" , "got a t/my-bag/bag-info.txt";
     ok -f "t/my-bag/manifest-md5.txt" , "got a t/my-bag/manifest-md5.txt";
-    ok -f "t/my-bag/tag-manifest-md5.txt" , "got a t/my-bag/tag-manifest-md5.txt";
+    ok -f "t/my-bag/tagmanifest-md5.txt" , "got a t/my-bag/tagmanifest-md5.txt";
 
     my $bagit2 = Catmandu::BagIt->new;
     $bagit2->add_info('Test',123);

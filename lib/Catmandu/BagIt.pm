@@ -276,12 +276,9 @@ sub write {
     die "usage: write(path[, overwrite => 1])" unless $path;
 
     # Check if other processes are writing or previous processes died
-    if (
-        (defined($self->path) && -f $self->path . "/.lock") ||
-        -f "$path/.lock"
-       ) {
-        $self->log->error($self->path . "/.lock or $path/.lock exists");
-        $self->_push_error($self->path . "/.lock or $path/.lock exists");
+    if ($self->locked($path)) {
+        $self->log->error("$path is locked");
+        $self->_push_error("$path is locked");
         return undef;
     }
 
@@ -305,7 +302,7 @@ sub write {
         path($path)->remove_tree;
     }
 
-    if (-f "$path/bagit.txt") {
+    if (-f $self->_bagit_file($path)) {
         if ($opts{overwrite}) {
             $self->log->info("overwriting: $path");
         }
@@ -321,8 +318,8 @@ sub write {
         $self->_dirty($self->dirty | FLAG_BAGIT);
     }
 
-    unless ($self->touch("$path/.lock")) {
-        $self->log->error("failed to create $path/.lock");
+    unless ($self->touch($self->_lock_file($path))) {
+        $self->log->error("failed to lock in $path");
         return undef;
     }
 
@@ -341,7 +338,7 @@ sub write {
 
     $self->_dirty(0);
 
-    unlink("$path/.lock");
+    unlink($self->_lock_file($path));
 
     $ok = 0;
 
@@ -357,13 +354,67 @@ sub write {
     $ok == 7;
 }
 
+sub _bagit_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'bagit.txt');
+}
+
+sub _bag_info_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'bag-info.txt');
+}
+
+sub _package_info_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'package-info.txt');
+}
+
+sub _manifest_md5_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'manifest-md5.txt');
+}
+
+sub _tagmanifest_md5_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'tagmanifest-md5.txt');
+}
+
+sub _fetch_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'fetch.txt');
+}
+
+sub _tag_file {
+    my ($self,$path,$file) = @_;
+
+    File::Spec->catfile($path,$file);
+}
+
+sub _payload_file {
+    my ($self,$path,$file) = @_;
+
+    File::Spec->catfile($path,'data',$file);
+}
+
+sub _lock_file {
+    my ($self,$path) = @_;
+
+    File::Spec->catfile($path,'.lock');
+}
+
 sub locked {
     my ($self,$path) = @_;
     $path //= $self->path;
 
     return undef unless defined($path);
 
-    -f "$path/.lock";
+    -f $self->_lock_file($path);
 }
 
 sub touch {
@@ -679,8 +730,8 @@ sub complete {
 
     foreach my $file (@missing) {
         unless (grep { $_->filename =~ /^$file$/ } $self->list_fetch) {
-            $self->log->error("file $file doesn' exist in bag and fetch.txt");
-            $self->_push_error("file $file doesn' exist in bag and fetch.txt");
+            $self->log->error("file $file doesn't exist in bag and fetch.txt");
+            $self->_push_error("file $file doesn't exist in bag and fetch.txt");
         }
     }
 
@@ -706,7 +757,9 @@ sub valid {
         }
 
         my $md5 = $tag == 0 ? $self->get_checksum($file) : $self->get_tagsum($file);
-        my $fh  = $tag == 0 ? new IO::File "$path/data/$file", "r" : new IO::File "$path/$file" , "r";
+        my $fh  = $tag == 0 ?
+                    new IO::File $self->_payload_file($path,$file), "r" :
+                    new IO::File $self->_tag_file($path,$file) , "r";
 
         unless ($fh) {
             $self->log->error("can't read $file");
@@ -835,11 +888,11 @@ sub _read_fetch {
 
     $self->_fetch([]);
 
-    return 1 unless -f "$path/fetch.txt";
+    return 1 unless -f $self->_fetch_file($path);
 
     $self->log->debug("reading fetch.txt");
 
-    foreach my $line (path("$path/fetch.txt")->lines_utf8) {
+    foreach my $line (path($self->_fetch_file($path))->lines_utf8) {
         $line =~ s/\r\n$/\n/g;
         chomp($line);
 
@@ -858,13 +911,13 @@ sub _read_tag_manifest {
 
     $self->_tag_sums({});
 
-    if (! -f "$path/tagmanifest-md5.txt") {
+    if (! -f $self->_tagmanifest_md5_file($path)) {
         return 1;
     }
 
     $self->log->debug("reading tagmanifest-md5.txt");
 
-    foreach my $line (path("$path/tagmanifest-md5.txt")->lines_utf8) {
+    foreach my $line (path($self->_tagmanifest_md5_file($path))->lines_utf8) {
        $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
@@ -881,12 +934,12 @@ sub _read_manifest {
 
     $self->_sums({});
 
-    if (! -f "$path/manifest-md5.txt") {
-        $self->_push_error("$path/manifest-md5.txt bestaat niet");
+    if (! -f $self->_manifest_md5_file($path)) {
+        $self->_push_error("no manifest-md5.txt in $path");
         return 0;
     }
 
-    foreach my $line (path("$path/manifest-md5.txt")->lines_utf8) {
+    foreach my $line (path($self->_manifest_md5_file($path))->lines_utf8) {
         $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
@@ -954,11 +1007,13 @@ sub _read_info {
 
     $self->_info([]);
 
-    my $info_file = -f "$path/bag-info.txt" ? "$path/bag-info.txt" :  "$path/package-info.txt";
+    my $info_file = -f $self->_bag_info_file($path) ?
+                        $self->_bag_info_file($path) :
+                        $self->_package_info_file($path);
 
     if (! -f $info_file) {
-        $self->log->error("$path/package-info.txt or $path/bag-info.txt doesn't exist");
-        $self->_push_error("$path/package-info.txt or $path/bag-info.txt doesn't exist");
+        $self->log->error("no package-info.txt or bag-info.txt in $path");
+        $self->_push_error("no package-info.txt or bag-info.txt in $path");
         return 0;
     }
 
@@ -985,14 +1040,14 @@ sub _read_version {
 
     $self->log->debug("reading the version file");
 
-    if (! -f "$path/bagit.txt" ) {
-        $self->log->error("$path/bagit.txt doesn't exist");
-        $self->_push_error("$path/bagit.txt doesn't exist");
+    if (! -f $self->_bagit_file($path) ) {
+        $self->log->error("no bagit.txt in $path");
+        $self->_push_error("no bagit.txt in $path");
         return 0;
     }
 
-    foreach my $line (path("$path/bagit.txt")->lines_utf8) {
-    $line =~ s/\r\n$/\n/g;
+    foreach my $line (path($self->_bagit_file($path))->lines_utf8) {
+        $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($n,$v) = split(/\s*:\s*/,$line,2);
 
@@ -1014,7 +1069,7 @@ sub _write_bagit {
 
     $self->log->info("writing the version file");
 
-    path("$path/bagit.txt")->spew_utf8($self->_bagit_as_string);
+    path($self->_bagit_file($path))->spew_utf8($self->_bagit_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_BAGIT);
 
@@ -1040,7 +1095,7 @@ sub _write_info {
 
     $self->log->info("writing the tag info file");
 
-    path("$path/bag-info.txt")->spew_utf8($self->_baginfo_as_string);
+    path($self->_bag_info_file($path))->spew_utf8($self->_baginfo_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_BAG_INFO);
 
@@ -1147,19 +1202,19 @@ sub _write_fetch {
 
     unless (defined($fetch_str) && length($fetch_str)) {
         $self->log->info("removing fetch.txt");
-        unlink "$path/fetch.txt" if -f "$path/fetch.txt";
+        unlink $self->_fetch_file($path) if -f $self->_fetch_file($path);
         return 1;
     }
 
     $self->log->info("writing the fetch file");
 
     if ($self->_fetch == 0) {
-        unlink "$path/fetch.txt" if -r "$path/fetch.txt";
+        unlink $self->_fetch_file($path) if -r $self->_fetch_file($path);
         $self->_dirty($self->dirty ^ FLAG_FETCH);
         return 1;
     }
 
-    path("$path/fetch.txt")->spew_utf8($fetch_str);
+    path($self->_fetch_file($path))->spew_utf8($fetch_str);
 
     $self->_dirty($self->dirty ^ FLAG_FETCH);
 
@@ -1185,7 +1240,7 @@ sub _write_manifest {
 
     $self->log->info("writing the manifest file");
 
-    path("$path/manifest-md5.txt")->spew_utf8($self->_manifest_as_string);
+    path($self->_manifest_md5_file($path))->spew_utf8($self->_manifest_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_MANIFEST);
 
@@ -1201,7 +1256,7 @@ sub _manifest_as_string {
     my $str = '';
 
     foreach my $file ($self->list_checksum) {
-        next unless -f "$path/data/$file";
+        next unless -f $self->_payload_file($path,$file);
         my $md5 = $self->get_checksum($file);
         $str .= "$md5 data/$file\n";
     }
@@ -1217,9 +1272,9 @@ sub _write_tag_manifest {
     # The tag manifest can be dirty when writing new files
     $self->_update_tag_manifest;
 
-    $self->log->info("writing the tag manifest file");
+    $self->log->info("writing the tagmanifest file");
 
-    path("$path/tag-manifest-md5.txt")->spew_utf8($self->_tag_manifest_as_string);
+    path($self->_tagmanifest_md5_file($path))->spew_utf8($self->_tag_manifest_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_MANIFEST);
 

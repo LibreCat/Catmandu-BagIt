@@ -219,6 +219,8 @@ Get a Catmandu::BagIt::Payload object for the file $filename.
 
 ## add\_file($filename, IO::File->new(...))
 
+## add\_file($filaname, sub { my $io = shift; .... })
+
 Add a new file to the BagIt.
 
 ## remove\_file($filename)
