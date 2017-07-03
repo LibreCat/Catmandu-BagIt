@@ -264,7 +264,12 @@ sub read {
 
     $self->_dirty(0);
 
-    $ok == 7 ? $self : undef;
+    if ( wantarray ) {
+        return $ok == 7 ? ($self) : (undef, $self->errors);
+    }
+    else {
+        return $ok == 7 ? $self : undef;
+    }
 }
 
 # Write the content of a bag back to disk
@@ -1461,7 +1466,12 @@ Create a new BagIt object
 
 =head2 read($directory)
 
-Open an exiting BagIt object
+Open an exiting BagIt object and return an instance of BagIt or undef on failure.
+In array context the read method also returns all errors as an array:
+
+  my $bagit = Catmandu::BagIt->read("/data/my-bag");
+
+  my ($bagit,@errors) = Catmandu::BagIt->read("/data/my-bag");
 
 =head2 write($directory, [%options])
 
