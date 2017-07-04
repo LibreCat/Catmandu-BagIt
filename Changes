@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+    - Returning errors on read() in wantarray context
+    - Fixing mswin tests 
 
 0.13  2017-06-28 11:34:24 CEST
     - Adding support for adding data using callback functions
