@@ -120,7 +120,12 @@ Create a new BagIt object
 
 ## read($directory)
 
-Open an exiting BagIt object
+Open an exiting BagIt object and return an instance of BagIt or undef on failure.
+In array context the read method also returns all errors as an array:
+
+    my $bagit = Catmandu::BagIt->read("/data/my-bag");
+
+    my ($bagit,@errors) = Catmandu::BagIt->read("/data/my-bag");
 
 ## write($directory, \[%options\])
 
