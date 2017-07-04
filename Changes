@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.14  2017-07-04 10:17:17 CEST
     - Returning errors on read() in wantarray context
     - Fixing mswin tests 
 

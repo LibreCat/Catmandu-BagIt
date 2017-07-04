@@ -4,7 +4,7 @@ use IO::File;
 use File::Copy;
 use Path::Tiny qw();
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 has 'filename' => (is => 'ro');
 has 'path'     => (is => 'ro');
