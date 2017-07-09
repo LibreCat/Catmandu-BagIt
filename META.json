@@ -43,7 +43,6 @@
          "requires" : {
             "Catmandu" : "0.9209",
             "File::Copy" : "0",
-            "File::Path" : "0",
             "IO" : "0",
             "LWP::Simple" : "6.00",
             "Path::Iterator::Rule" : "1.0",

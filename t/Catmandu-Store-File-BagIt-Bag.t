@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use IO::String;
+use Path::Tiny;
 use Catmandu::Store::File::BagIt;
 use utf8;
 
@@ -57,46 +58,53 @@ note("list");
         'got correct response';
 }
 
-# note("exists");
-# {
-#     for (1 .. 3) {
-#         ok $bag->exists("test" . $_ . ".txt"), "exists(test" . $_ . ".txt)";
-#     }
-# }
-#
-# note("get");
-# {
-#     for (1 .. 3) {
-#         ok $bag->get("test" . $_ . ".txt"), "get(test" . $_ . ".txt)";
-#     }
-#
-#     my $file = $bag->get("test1.txt");
-#
-#     my $str = $bag->as_string_utf8($file);
-#
-#     ok $str , 'can stream the data';
-#
-#     is $str , "钱唐湖春行\n", 'got the correct data';
-# }
-#
-# note("delete");
-# {
-#     ok $bag->delete('test1.txt'), 'delete(test1.txt)';
-#
-#     my $array = [sort @{$bag->map(sub {shift->{_id}})->to_array}];
-#
-#     ok $array , 'list got a response';
-#
-#     is_deeply $array , [qw(test2.txt test3.txt)], 'got correct response';
-# }
-#
-# note("delete_all");
-# {
-#     lives_ok {$bag->delete_all()} 'delete_all';
-#
-#     my $array = $bag->to_array;
-#
-#     is_deeply $array , [], 'got correct response';
-# }
+note("exists");
+{
+    for (1 .. 3) {
+        ok $bag->exists("test" . $_ . ".txt"), "exists(test" . $_ . ".txt)";
+    }
+}
+
+note("get");
+{
+    for (1 .. 3) {
+        ok $bag->get("test" . $_ . ".txt"), "get(test" . $_ . ".txt)";
+    }
+
+    my $file = $bag->get("test1.txt");
+
+    my $str = $bag->as_string_utf8($file);
+
+    ok $str , 'can stream the data';
+
+    is $str , "钱唐湖春行\n", 'got the correct data';
+}
+
+note("delete");
+{
+    ok $bag->delete('test1.txt'), 'delete(test1.txt)';
+
+    my $array = [sort @{$bag->map(sub {shift->{_id}})->to_array}];
+
+    ok $array , 'list got a response';
+
+    is_deeply $array , [qw(test2.txt test3.txt)], 'got correct response';
+}
+
+note("delete_all");
+{
+    lives_ok {$bag->delete_all()} 'delete_all';
+
+    my $array = $bag->to_array;
+
+    is_deeply $array , [], 'got correct response';
+}
 
 done_testing();
+
+END {
+	my $error = [];
+	# Stupid chdir trick to make remove_tree work
+	chdir("lib");
+	path('../t/data')->remove_tree;
+};

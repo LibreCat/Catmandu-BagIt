@@ -65,7 +65,7 @@ sub get {
 
     my $file = $bagit->get_file($packed_key);
 
-    return undef unless -f $file;
+    return undef unless $file;
 
     my $stat     = [$file->path];
 
@@ -148,7 +148,7 @@ sub delete {
 
     my $file = $bagit->get_file($packed_key);
 
-    return undef unless -f $file;
+    return undef unless $file;
 
     $bagit->remove_file($packed_key);
 

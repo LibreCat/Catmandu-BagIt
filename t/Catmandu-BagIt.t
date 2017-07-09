@@ -9,7 +9,6 @@ use IO::File;
 use IO::Handle;
 use IO::Pipe;
 use POSIX qw(strftime);
-use File::Path qw(remove_tree);
 use Path::Tiny;
 use Test::LWP::UserAgent;
 use utf8;
@@ -538,7 +537,7 @@ sub remove_path {
     # Stupid chdir trick to make remove_tree work
     chdir("lib");
     if (-d "../$path") {
-       remove_tree("../$path");
+       path("../$path")->remove_tree;
     }
     chdir("..");
 }
