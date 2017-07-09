@@ -1456,6 +1456,8 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
 =item * L<Catmandu::Exporter::BagIt>
 
+=item * L<Catmandu::Store::File::BagIt>
+
 =back
 
 =head1 METHODS
