@@ -7,8 +7,8 @@ use Moo;
 use Carp;
 use Catmandu;
 use Catmandu::Util;
-use Catmandu::Store::File::Simple::Index;
-use Catmandu::Store::File::Simple::Bag;
+use Catmandu::Store::File::BagIt::Index;
+use Catmandu::Store::File::BagIt::Bag;
 use Data::UUID;
 use namespace::clean;
 
@@ -73,28 +73,28 @@ __END__
 
 =head1 NAME
 
-Catmandu::Store::File::Simple - A Catmandu::FileStore to store files on disk
+Catmandu::Store::File::BagIt - A Catmandu::FileStore to store files on disk in the BagIt format
 
 =head1 SYNOPSIS
 
     # From the command line
 
     # Export a list of all file containers
-    $ catmandu export File::Simple --root t/data to YAML
+    $ catmandu export File::BagIt --root t/data to YAML
 
     # Export a list of all files in container '1234'
-    $ catmandu export File::Simple --root t/data --bag 1234 to YAML
+    $ catmandu export File::BagIt --root t/data --bag 1234 to YAML
 
     # Add a file to the container '1234'
-    $ catmandu stream /tmp/myfile.txt to File::Simple --root t/data --bag 1234 --id myfile.txt
+    $ catmandu stream /tmp/myfile.txt to File::BagIt --root t/data --bag 1234 --id myfile.txt
 
     # Download the file 'myfile.txt' from the container '1234'
-    $ catmandu stream File::Simple --root t/data --bag 1234 --id myfile.txt to /tmp/output.txt
+    $ catmandu stream File::BagIt --root t/data --bag 1234 --id myfile.txt to /tmp/output.txt
 
     # From Perl
     use Catmandu;
 
-    my $store = Catmandu->store('File::Simple' , root => 't/data');
+    my $store = Catmandu->store('File::BagIt' , root => 't/data');
 
     my $index = $store->index;
 
@@ -128,7 +128,7 @@ Catmandu::Store::File::Simple - A Catmandu::FileStore to store files on disk
 
 =head1 DESCRIPTION
 
-L<Catmandu::Store::File::Simple> is a L<Catmandu::FileStore> implementation to
+L<Catmandu::Store::File::BagIt> is a L<Catmandu::FileStore> implementation to
 store files in a directory structure. Each L<Catmandu::FileBag> is
 a deeply nested directory based on the numeric identifier of the bag. E.g.
 
@@ -153,7 +153,7 @@ The root directory where to store all the files. Required.
 
 By default the directory structure is 3 levels deep. With the keysize option
 a deeper nesting can be created. The keysize needs to be a multiple of 3.
-All the container keys of a L<Catmandu::Store::File::Simple> must be integers.
+All the container keys of a L<Catmandu::Store::File::BagIt> must be integers.
 
 =item uuid
 
@@ -163,8 +163,8 @@ If the to a true value, then the Simple store will require UUID-s as keys
 
 =head1 SEE ALSO
 
-L<Catmandu::Store::File::Simple::Index>,
-L<Catmandu::Store::File::Simple::Bag>,
+L<Catmandu::Store::File::BagIt::Index>,
+L<Catmandu::Store::File::BagIt::Bag>,
 L<Catmandu::FileStore>
 
 =cut
