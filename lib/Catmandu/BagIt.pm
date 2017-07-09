@@ -1602,7 +1602,7 @@ Mirror a Catmandu::BagIt::Fetch object to local disk.
 
 =head1 SEE ALSO
 
-L<Catmandu::Importer::BagIt> , L<Catmandu::Exporter::BagIt>
+L<Catmandu::Importer::BagIt> , L<Catmandu::Exporter::BagIt> , L<Catmandu::Store::File::BagIt>
 
 =head1 AUTHOR
 
