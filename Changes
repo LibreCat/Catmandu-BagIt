@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.15  2017-07-10 12:20:32 CEST
     - Adding BagIt as Catmandu::Store::File
     
 0.14  2017-07-04 10:17:17 CEST
