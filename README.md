@@ -111,6 +111,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
 - [Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt)
 - [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt)
+- [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu::Store::File::BagIt)
 
 # METHODS
 
@@ -254,7 +255,7 @@ Mirror a Catmandu::BagIt::Fetch object to local disk.
 
 # SEE ALSO
 
-[Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt) , [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt)
+[Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt) , [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt) , [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu::Store::File::BagIt)
 
 # AUTHOR
 

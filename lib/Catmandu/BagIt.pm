@@ -524,7 +524,7 @@ sub add_fetch {
     my ($self, $url, $size, $filename) = @_;
 
     die "usage add_fetch(url,size,filename)"
-            unless defined($url) && $size =~ /^\d+$/ && defined($filename);
+            unless defined($url) && $size =~ /^[0-9]+$/ && defined($filename);
 
     die "illegal file name $filename"
             unless $self->_is_legal_file_name($filename);
@@ -709,7 +709,7 @@ sub complete {
 
     $self->log->info("checking complete");
 
-    unless ($self->version and $self->version =~ /^\d+\.\d+$/) {
+    unless ($self->version and $self->version =~ /^[0-9]+\.[0-9]+$/) {
         $self->log->error("Tag 'BagIt-Version' not available in bagit.txt");
         $self->_push_error("Tag 'BagIt-Version' not available in bagit.txt");
     }

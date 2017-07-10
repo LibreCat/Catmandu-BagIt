@@ -220,7 +220,7 @@ note("reading operations demo01 (valid bag)");
     is $bagit->path , 'bags/demo01' , 'path';
     is $bagit->version , '0.97', 'version';
     is $bagit->encoding , 'UTF-8' , 'encoding';
-    like $bagit->size , qr/\d+.\d+ KB/ , 'size';
+    like $bagit->size , qr/[0-9]+.[0-9]+ KB/ , 'size';
     is $bagit->payload_oxum , '92877.1' , 'payload_oxum';
 
     is $bagit->get_info('Bag-Size') , '90.8 KB' , 'Bag-Size info';
@@ -270,7 +270,7 @@ note("reading operations demo02 (invalid bag)");
     is $bagit->path , 'bags/demo02' , 'path';
     is $bagit->version , '0.97', 'version';
     is $bagit->encoding , 'UTF-8' , 'encoding';
-    like $bagit->size , qr/\d+.\d+ KB/ , 'size';
+    like $bagit->size , qr/[0-9]+.[0-9]+ KB/ , 'size';
     is $bagit->payload_oxum , '0.2' , 'payload_oxum';
 
     is $bagit->get_info('Bag-Size') , '39.6 KB' , 'Bag-Size info';
