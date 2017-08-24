@@ -71,7 +71,7 @@
          "web" : "https://github.com/LibreCat/Catmandu-BagIt"
       }
    },
-   "version" : "0.15",
+   "version" : "0.151",
    "x_contributors" : [
       "Vitali Peil <vitali.peil@uni-bielefeld.de>"
    ],
