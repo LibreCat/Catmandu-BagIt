@@ -146,6 +146,8 @@ sub add {
 
             $file =~ s{^data/}{};
             $bagit->add_file($file,IO::File->new($fname));
+            # close the bag to keep the number of open file handles to a minimum
+            # only the files that are flagged 'dirty' will be written
             $bagit->write($directory, overwrite => 1);
 
             undef($tmp);
