@@ -52,7 +52,21 @@ ok $first->{version} , 'checking version bug';
 
 ok exists $first->{manifest}->{'data/poem.txt'} , 'found a manifest';
 
-done_testing 13;
+ok $exporter->add({
+    _id   => 't/my-bag-files' ,
+    tags  => { 'Foo' => 'Bar' } ,
+    files => [
+        { 't/poem.txt' => 'data/poem.txt'},
+        { 't/poem2.txt' => 'data/poem2.txt'}
+    ] ,
+}) , qq|created t/my-bag-files bag|;
+
+ok -r "t/my-bag-files/data/poem.txt", "poem.txt was copied from file";
+ok -r "t/my-bag-files/data/poem2.txt", "poem2.txt was copied from file";
+
+$exporter->commit;
+
+done_testing 15;
 
 sub user_agent  {
     my $ua = Test::LWP::UserAgent->new(agent => 'Test/1.0');
@@ -82,4 +96,5 @@ END {
 	# Stupid chdir trick to make remove_tree work
 	chdir("lib");
 	path('../t/my-bag')->remove_tree;
+    path('../t/my-bag-files')->remove_tree;
 };
