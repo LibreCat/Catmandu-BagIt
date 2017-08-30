@@ -91,6 +91,9 @@ Catmandu::Store::File::BagIt - A Catmandu::FileStore to store files on disk in t
     # Download the file 'myfile.txt' from the container '1234'
     $ catmandu stream File::BagIt --root t/data --bag 1234 --id myfile.txt to /tmp/output.txt
 
+    # Delete the file 'myfile.txt' from the container '1234'
+    $ catmandu delete File::BagIt --root t/data --bag 1234 --id myfile.txt 
+
     # From Perl
     use Catmandu;
 
