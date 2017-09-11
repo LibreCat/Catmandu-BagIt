@@ -66,7 +66,7 @@ ok -r "t/my-bag-files/data/poem2.txt", "poem2.txt was copied from file";
 
 $exporter->commit;
 
-done_testing 15;
+done_testing;
 
 sub user_agent  {
     my $ua = Test::LWP::UserAgent->new(agent => 'Test/1.0');
