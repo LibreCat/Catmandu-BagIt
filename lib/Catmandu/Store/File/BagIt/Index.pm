@@ -1,6 +1,6 @@
 package Catmandu::Store::File::BagIt::Index;
 
-our $VERSION = '1.0602';
+our $VERSION = '0.16';
 
 use Catmandu::Sane;
 use Moo;
@@ -96,7 +96,7 @@ sub add {
     # Throws an exception when the path can't be created
     path($path)->mkpath;
 
-    my $new_data =  $self->get($id);
+    my $new_data = $self->get($id);
 
     $data->{$_} = $new_data->{$_} for keys %$new_data;
 
