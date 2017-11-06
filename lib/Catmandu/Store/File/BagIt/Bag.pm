@@ -137,7 +137,11 @@ sub add {
 
     $bagit->write($path, overwrite => 1);
 
-    return $self->get($id);
+    my $new_data = $self->get($id);
+
+    $data->{$_} = $new_data->{$_} for keys %$new_data;
+
+    1;
 }
 
 sub delete {
