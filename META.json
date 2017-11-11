@@ -76,6 +76,6 @@
       "Nicolas Franck <njfranck@ca20c533.ugent.be>",
       "Vitali Peil <vitali.peil@uni-bielefeld.de>"
    ],
-   "x_serialization_backend" : "Cpanel::JSON::XS version 3.0237"
+   "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }
 

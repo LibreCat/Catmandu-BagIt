@@ -69,7 +69,7 @@ sub get {
 
     return undef unless $file;
 
-    my $stat     = [$file->path];
+    my $stat     = [stat $file->path];
 
     my $size     = $stat->[7];
     my $modified = $stat->[9];
