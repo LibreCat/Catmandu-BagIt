@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.18  2017-11-11 16:11:30 CET
     - Fixing dependencies
 
 0.17  2017-11-06 14:18:13 CET
