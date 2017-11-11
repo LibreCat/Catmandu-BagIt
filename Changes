@@ -1,10 +1,11 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+    - Fixing dependencies
 
 0.17  2017-11-06 14:18:13 CET
     - Making add() methods for File::Store more like add() for Store
-    
+
 0.16  2017-09-11 11:34:51 CEST
     - Supporting exporting local files to BagIts
 

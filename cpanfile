@@ -9,7 +9,7 @@ on test => sub {
   requires 'Test::LWP::UserAgent' , '0';
 };
 
-requires 'Catmandu','1.06';
+requires 'Catmandu','1.07';
 requires 'LWP::Simple','6.00';
 requires 'Path::Tiny','0.1';
 requires 'Path::Iterator::Rule','1.0';

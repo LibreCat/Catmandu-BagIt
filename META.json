@@ -41,7 +41,7 @@
             "Log::Log4perl" : "1.44"
          },
          "requires" : {
-            "Catmandu" : "1.06",
+            "Catmandu" : "1.07",
             "File::Copy" : "0",
             "IO" : "0",
             "LWP::Simple" : "6.00",
@@ -71,7 +71,7 @@
          "web" : "https://github.com/LibreCat/Catmandu-BagIt"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_contributors" : [
       "Nicolas Franck <njfranck@ca20c533.ugent.be>",
       "Vitali Peil <vitali.peil@uni-bielefeld.de>"
