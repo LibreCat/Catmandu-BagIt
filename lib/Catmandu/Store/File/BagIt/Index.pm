@@ -1,6 +1,6 @@
 package Catmandu::Store::File::BagIt::Index;
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 use Catmandu::Sane;
 use Moo;

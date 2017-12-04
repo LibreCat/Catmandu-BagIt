@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.19  2017-12-04 16:47:42 CET
     - Fixing missing overwrite bug
 
 0.18  2017-11-11 16:11:30 CET

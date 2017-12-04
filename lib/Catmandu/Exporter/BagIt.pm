@@ -105,7 +105,7 @@ use IO::File;
 use LWP::Simple;
 use Moo;
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 with 'Catmandu::Exporter';
 
