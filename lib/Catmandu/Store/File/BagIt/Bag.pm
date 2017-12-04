@@ -125,7 +125,7 @@ sub add {
 
     my $packed_key = $self->pack_key($id);
 
-    $bagit->add_file($packed_key,$io);
+    $bagit->add_file($packed_key,$io,overwrite => 1);
 
     unless ($update) {
         $bagit->remove_info('Bagging-Date');
