@@ -170,6 +170,11 @@ If the to a true value, then the Simple store will require UUID-s as keys
 
 =back
 
+=head1 LARGE FILE SUPPORT
+
+Streaming large files into a BagIt requires a large /tmp directory. The location
+of the temp directory can be set with the TMPDIR environmental variable.
+
 =head1 INHERITED METHODS
 
 This Catmandu::FileStore implements:

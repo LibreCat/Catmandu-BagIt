@@ -1,6 +1,7 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+    - Adding more pod on /tmp sizes
 
 0.19  2017-12-04 16:47:42 CET
     - Fixing missing overwrite bug

@@ -1460,6 +1460,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
 =back
 
+=head1 LARGE FILE SUPPORT
+
+Streaming large files into a BagIt requires a large /tmp directory. The location
+of the temp directory can be set with the TMPDIR environmental variable.
+
 =head1 METHODS
 
 =head2 new()
