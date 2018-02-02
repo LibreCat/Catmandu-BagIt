@@ -2,6 +2,7 @@ Revision history for Catmandu-BagIt
 
 {{$NEXT}}
     - Adding more pod on /tmp sizes
+    - Fixing MD5 missing in File::Bag export bug
 
 0.19  2017-12-04 16:47:42 CET
     - Fixing missing overwrite bug

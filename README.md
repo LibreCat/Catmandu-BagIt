@@ -113,6 +113,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 - [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt)
 - [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu::Store::File::BagIt)
 
+# LARGE FILE SUPPORT
+
+Streaming large files into a BagIt requires a large /tmp directory. The location
+of the temp directory can be set with the TMPDIR environmental variable.
+
 # METHODS
 
 ## new()
