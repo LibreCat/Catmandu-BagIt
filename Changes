@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.20  2018-02-02 14:49:11 CET
     - Adding more pod on /tmp sizes
     - Fixing MD5 missing in File::Bag export bug
 

@@ -1,7 +1,7 @@
 package Catmandu::BagIt;
 
 use strict;
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 use Catmandu::Sane;
 use Catmandu;
