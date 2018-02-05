@@ -1,5 +1,7 @@
 package Catmandu::Exporter::BagIt;
 
+our $VERSION = '0.20';
+
 =head1 NAME
 
 Catmandu::Exporter::BagIt - Package that exports data as BagIts
@@ -104,8 +106,6 @@ use File::Spec;
 use IO::File;
 use LWP::Simple;
 use Moo;
-
-our $VERSION = '0.20';
 
 with 'Catmandu::Exporter';
 

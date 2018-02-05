@@ -1,10 +1,11 @@
 package Catmandu::BagIt::Payload;
+
+our $VERSION = '0.20';
+
 use Moo;
 use IO::File;
 use File::Copy;
 use Path::Tiny qw();
-
-our $VERSION = '0.20';
 
 has 'filename' => (is => 'ro');
 has 'path'     => (is => 'ro');
