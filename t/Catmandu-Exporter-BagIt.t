@@ -16,6 +16,7 @@ BEGIN {
 };
 require_ok $pkg;
 
+my $bag_dir  = "t/my-bag-$$";
 my $exporter = $pkg->new(user_agent => user_agent());
 
 isa_ok $exporter, $pkg;
@@ -27,16 +28,16 @@ throws_ok {
 } 'Catmandu::Error' , qq|caught an error|;
 
 ok $exporter->add({
-	_id   => 't/my-bag' ,
+	_id   => $bag_dir ,
 	tags  => { 'Foo' => 'Bar' } ,
 	fetch => [ { 'http://demo.org/' => 'data/poem.txt'} ] ,
-}) , qq|created t/my-bag bag|;
+}) , qq|created $bag_dir bag|;
 
 ok $exporter->commit , 'commit';
 
-ok -r 't/my-bag/data/poem.txt' , 'we got a poem.txt';
+ok -r "$bag_dir/data/poem.txt" , 'we got a poem.txt';
 
-my $importer = Catmandu::Importer::BagIt->new( bags => ['t/my-bag'] , verify => 1 , include_manifests => 1);
+my $importer = Catmandu::Importer::BagIt->new( bags => [$bag_dir] , verify => 1 , include_manifests => 1);
 
 ok $importer , 'created importer';
 
@@ -53,16 +54,16 @@ ok $first->{version} , 'checking version bug';
 ok exists $first->{manifest}->{'data/poem.txt'} , 'found a manifest';
 
 ok $exporter->add({
-    _id   => 't/my-bag-files' ,
+    _id   => "$bag_dir-files" ,
     tags  => { 'Foo' => 'Bar' } ,
     files => [
         { 't/poem.txt' => 'data/poem.txt'},
         { 't/poem2.txt' => 'data/poem2.txt'}
     ] ,
-}) , qq|created t/my-bag-files bag|;
+}) , qq|created $bag_dir-files bag|;
 
-ok -r "t/my-bag-files/data/poem.txt", "poem.txt was copied from file";
-ok -r "t/my-bag-files/data/poem2.txt", "poem2.txt was copied from file";
+ok -r "$bag_dir-files/data/poem.txt", "poem.txt was copied from file";
+ok -r "$bag_dir-files/data/poem2.txt", "poem2.txt was copied from file";
 
 $exporter->commit;
 
@@ -95,6 +96,6 @@ END {
 	my $error = [];
 	# Stupid chdir trick to make remove_tree work
 	chdir("lib");
-	path('../t/my-bag')->remove_tree;
-    path('../t/my-bag-files')->remove_tree;
+	path("../$bag_dir")->remove_tree;
+    path("../$bag_dir-files")->remove_tree;
 };

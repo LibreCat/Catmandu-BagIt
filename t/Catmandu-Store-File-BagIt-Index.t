@@ -14,6 +14,8 @@ BEGIN {
 
 require_ok $pkg;
 
+my $bag_dir = "t/my-bag-$$";
+
 my $store
     = Catmandu::Store::File::BagIt->new(root => 't/data2', keysize => 9);
 my $index;
@@ -54,7 +56,7 @@ note("get");
     }
 }
 
-$store = Catmandu::Store::File::BagIt->new(root => 't/data', keysize => 9);
+$store = Catmandu::Store::File::BagIt->new(root => $bag_dir, keysize => 9);
 $index = $store->bag();
 
 note("add");
@@ -70,14 +72,14 @@ note("add");
 
     ok $c , 'add(1234)';
 
-    ok -d "t/data/000/001/234", 'found a container on disk';
+    ok -d "$bag_dir/000/001/234", 'found a container on disk';
 }
 
 note("delete");
 {
     ok $index->delete('1234'), 'delete(1234)';
 
-    ok !-d "t/data/000/001/234", 'container on disk was deleted';
+    ok !-d "$bag_dir/000/001/234", 'container on disk was deleted';
 }
 
 note("delete_all");
@@ -86,3 +88,10 @@ note("delete_all");
 }
 
 done_testing();
+
+END {
+	my $error = [];
+	# Stupid chdir trick to make remove_tree work
+	chdir("lib");
+	path("../$bag_dir")->remove_tree;
+};
