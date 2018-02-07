@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use Catmandu::Store::File::BagIt;
+use Path::Tiny;
 
 my $pkg;
 
