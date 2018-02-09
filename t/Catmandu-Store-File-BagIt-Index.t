@@ -92,7 +92,5 @@ done_testing();
 
 END {
 	my $error = [];
-	# Stupid chdir trick to make remove_tree work
-	chdir("lib");
-	path("../$bag_dir")->remove_tree;
+	path("$bag_dir")->remove_tree;
 };
