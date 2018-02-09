@@ -7,6 +7,7 @@ on test => sub {
   requires 'Test::Exception', '0.32';
   requires 'Test::More', '1.001003';
   requires 'Test::LWP::UserAgent' , '0';
+  requires 'Test::Pod','0';
 };
 
 requires 'Catmandu','1.07';
