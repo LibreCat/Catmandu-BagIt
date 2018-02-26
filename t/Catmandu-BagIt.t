@@ -498,32 +498,36 @@ note("lock");
 
 note("pipe");
 {
-    my $pipe = new IO::Pipe;
+  SKIP: {
+      skip "ENV{PIPETEST} not set", 4 unless $ENV{PIPETEST};
+      
+      my $pipe = new IO::Pipe;
 
-    if(my $pid = fork()) { # Parent
-        $pipe->reader();
+      if(my $pid = fork()) { # Parent
+          $pipe->reader();
 
-        my $bagit = Catmandu::BagIt->new;
+          my $bagit = Catmandu::BagIt->new;
 
-        ok $bagit->add_file("test.txt",$pipe) , 'add_file() pipe';
+          ok $bagit->add_file("test.txt",$pipe) , 'add_file() pipe';
 
-        ok $bagit->write($bag_dir) , 'write()';
+          ok $bagit->write($bag_dir) , 'write()';
 
-        my $file = $bagit->get_file("test.txt");
+          my $file = $bagit->get_file("test.txt");
 
-        ok $file;
+          ok $file;
 
-        is path($file->path)->slurp_utf8 , "Hello, parent!\n" , 'file->data';
+          is path($file->path)->slurp_utf8 , "Hello, parent!\n" , 'file->data';
 
-        remove_path($bag_dir);
-    }
-    elsif(defined $pid) { # Child
-        $pipe->writer();
+          remove_path($bag_dir);
+      }
+      elsif(defined $pid) { # Child
+          $pipe->writer();
 
-        print $pipe "Hello, parent!\n";
+          print $pipe "Hello, parent!\n";
 
-        exit(0);
-    }
+          exit(0);
+      }
+  }
 }
 
 done_testing;
@@ -563,7 +567,5 @@ EOF
 
 END {
 	my $error = [];
-	# Stupid chdir trick to make remove_tree work
-	chdir("lib");
-	path("../$bag_dir")->remove_tree;
+	path("$bag_dir")->remove_tree;
 };
