@@ -80,7 +80,7 @@ sub get {
     return {
         _id          => $id,
         size         => $size,
-        md5          => $bagit->get_checksum($id) // undef,
+        md5          => $bagit->get_checksum($packed_key) // undef,
         content_type => $content_type,
         created      => $created,
         modified     => $modified,
