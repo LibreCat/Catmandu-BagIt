@@ -1,6 +1,6 @@
 package Catmandu::BagIt;
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 use Catmandu::Sane;
 use Catmandu;
