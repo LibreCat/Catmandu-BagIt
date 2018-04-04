@@ -129,11 +129,11 @@ sub add {
 
     unless ($update) {
         $bagit->remove_info('Bagging-Date');
-        $bagit->add_info('Bagging-Date', strftime("%Y-%M-%D %H:%M:%S", localtime(time)));
+        $bagit->add_info('Bagging-Date', strftime("%Y-%M-%D", gmtime));
     }
 
     $bagit->remove_info('Bagging-Update');
-    $bagit->add_info('Bagging-Update', strftime("%Y-%m-%d %H:%M:%S", localtime(time)));
+    $bagit->add_info('Bagging-Update', strftime("%Y-%m-%d", gmtime));
 
     $bagit->write($path, overwrite => 1);
 
