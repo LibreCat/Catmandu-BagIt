@@ -2,7 +2,7 @@ package Catmandu::Store::File::BagIt::Bag;
 
 use Catmandu::Sane;
 
-our $VERSION = '0.23';
+our $VERSION = '0.231';
 
 use Moo;
 use Carp;
