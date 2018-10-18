@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.233  2018-10-18 15:10:13 CEST
     - Fixing EAGAIN bug
     
 0.232  2018-09-03 11:27:36 CEST
