@@ -1323,7 +1323,7 @@ sub _md5_sum {
 sub _is_legal_file_name {
     my ($self, $filename) = @_;
 
-    return 0 unless ($filename =~ /^[[:alnum:]._-]+$/);
+    return 0 unless ($filename =~ /^[[:alnum:]._%-]+$/);
     return 0 if ($filename =~ m{(^\.|\/\.+\/)});
     return 1;
 }
