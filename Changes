@@ -1,6 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
+
+0.235  2019-02-11 16:41:11 CET
     - Fixing slow repeated calls to Catmandu::BagIt->read in Bag stores
 
 0.234  2019-01-10 14:51:21 CET
