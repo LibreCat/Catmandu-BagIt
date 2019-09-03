@@ -17,6 +17,7 @@ requires 'Path::Tiny','0.1';
 requires 'Path::Iterator::Rule','1.0';
 requires 'File::Copy','0';
 requires 'IO','0';
+requires 'Module::Build', '>=0.4229'; # travis ci
 
 recommends 'Log::Log4perl', '1.44';
 recommends 'Log::Any::Adapter::Log4perl', '0.06';
