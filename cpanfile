@@ -17,6 +17,11 @@ requires 'Path::Tiny','0.1';
 requires 'Path::Iterator::Rule','1.0';
 requires 'File::Copy','0';
 requires 'IO','0';
+requires 'IO::String','0';
+requires 'List::MoreUtils','0';
+requires 'Moo','0';
+requires 'URI::Escape','0';
+requires 'namespace::clean','0';
 
 recommends 'Log::Log4perl', '1.44';
 recommends 'Log::Any::Adapter::Log4perl', '0.06';
