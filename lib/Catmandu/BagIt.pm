@@ -1631,6 +1631,10 @@ L<Catmandu::Importer::BagIt> , L<Catmandu::Exporter::BagIt> , L<Catmandu::Store:
 
 Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
 
+=head1 CONTRIBUTORS
+
+Nicolas Franck, C<< nicolas.franck at ugent.be >>
+
 =head1 COPYRIGHT AND LICENSE
 
 This software is copyright (c) 2015 by Patrick Hochstenbach.
