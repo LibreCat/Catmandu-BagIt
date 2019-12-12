@@ -1591,13 +1591,16 @@ Return an ARRAY of real payload files found on disk as Catmandu::BagIt::Payload.
 
 Get a Catmandu::BagIt::Payload object for the file $filename.
 
-=head2 add_file($filename, $string)
+=head2 add_file($filename, $string, %opts)
 
-=head2 add_file($filename, IO::File->new(...))
+=head2 add_file($filename, IO::File->new(...), %opts)
 
-=head2 add_file($filaname, sub { my $io = shift; .... })
+=head2 add_file($filaname, sub { my $io = shift; .... }, %opts)
 
-Add a new file to the BagIt.
+Add a new file to the BagIt. Possible options:
+
+    overwrite => 1    - remove the old file
+    md5  => ""        - supply an MD5 (don't recalculate it)
 
 =head2 remove_file($filename)
 
