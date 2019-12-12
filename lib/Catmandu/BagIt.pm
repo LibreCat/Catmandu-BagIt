@@ -18,6 +18,7 @@ use Catmandu::BagIt::Fetch;
 use POSIX qw(strftime);
 use LWP::UserAgent;
 use utf8;
+use Catmandu::Util qw(is_string);
 use namespace::clean;
 
 # Flags indicating which operations are needed to create a valid bag
@@ -461,15 +462,33 @@ sub add_file {
     my $payload = Catmandu::BagIt::Payload->from_any($filename,$data);
     $payload->flag(FLAG_DIRTY);
 
+    my $sum;
+
+    if( is_string( $opts{md5} ) && $opts{md5} !~ /^[0-9a-f]{32}$/ ){
+
+        $self->log->error("supplied md5 sum for $filename does not look like an md5 sum");
+        $self->_push_error("supplied md5 sum for $filename does not look like an md5 sum");
+        return;
+
+    }
+    elsif( is_string( $opts{md5} ) ){
+
+        $sum = $opts{md5};
+
+    }
+    else {
+
+        my $fh = $payload->open;
+
+        binmode($fh,":raw");
+
+        $sum = $self->_md5_sum($fh);
+
+        close($fh);
+
+    }
+
     push @{ $self->_files }, $payload;
-
-    my $fh = $payload->open;
-
-    binmode($fh,":raw");
-
-    my $sum = $self->_md5_sum($fh);
-
-    close($fh);
 
     $self->_sums->{"$filename"} = $sum;
 
