@@ -226,13 +226,16 @@ Return an ARRAY of real payload files found on disk as Catmandu::BagIt::Payload.
 
 Get a Catmandu::BagIt::Payload object for the file $filename.
 
-## add\_file($filename, $string)
+## add\_file($filename, $string, %opts)
 
-## add\_file($filename, IO::File->new(...))
+## add\_file($filename, IO::File->new(...), %opts)
 
-## add\_file($filaname, sub { my $io = shift; .... })
+## add\_file($filaname, sub { my $io = shift; .... }, %opts)
 
-Add a new file to the BagIt.
+Add a new file to the BagIt. Possible options:
+
+    overwrite => 1    - remove the old file
+    md5  => ""        - supply an MD5 (don't recalculate it)
 
 ## remove\_file($filename)
 
@@ -265,6 +268,10 @@ Mirror a Catmandu::BagIt::Fetch object to local disk.
 # AUTHOR
 
 Patrick Hochstenbach <Patrick.Hochstenbach@UGent.be>
+
+# CONTRIBUTORS
+
+Nicolas Franck, `nicolas.franck at ugent.be`
 
 # COPYRIGHT AND LICENSE
 
