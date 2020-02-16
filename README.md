@@ -14,6 +14,9 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     # Assemble a new bag
     my $bagit = Catmandu::BagIt->new;
 
+    # Force a previous version and checksum algorithm
+    my $bagit = Catmandy::BagIt->new(version => '0.97' , algorithm => 'md5');
+
     # Read an existing
     my $bagit = Catmanu::BagIt->read($directory);
 
@@ -121,6 +124,8 @@ of the temp directory can be set with the TMPDIR environmental variable.
 # METHODS
 
 ## new()
+
+## new(version => ... , algorithm => 'md5|sha1|sha256|sha512')
 
 Create a new BagIt object
 
@@ -263,6 +268,10 @@ Remove a fetch entry from the BagIt.
 ## mirror\_fetch($fetch)
 
 Mirror a Catmandu::BagIt::Fetch object to local disk.
+
+# KNOWN LIMITATIONS
+
+This module only supports one manifest-algorithm.txt file per bag.
 
 # SEE ALSO
 

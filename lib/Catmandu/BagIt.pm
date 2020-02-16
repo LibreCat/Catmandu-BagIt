@@ -862,7 +862,7 @@ sub valid {
 
         close($fh);
 
-        unless ($sum eq $sum_check) {
+        unless (lc($sum) eq lc($sum_check)) {
             $self->log->error("$file checksum fails $sum <> $sum_check");
             return (0,"$file checksum fails $sum <> $sum_check");
         }
@@ -1731,6 +1731,10 @@ Remove a fetch entry from the BagIt.
 =head2 mirror_fetch($fetch)
 
 Mirror a Catmandu::BagIt::Fetch object to local disk.
+
+=head1 KNOWN LIMITATIONS
+
+This module only supports one manifest-algorithm.txt file per bag.
 
 =head1 SEE ALSO
 
