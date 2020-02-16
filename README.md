@@ -236,6 +236,9 @@ Add a new file to the BagIt. Possible options:
 
     overwrite => 1    - remove the old file
     md5  => ""        - supply an MD5 (don't recalculate it)
+    sha1 => ""        - supply an SHA1 (don't recalculate it)
+    sha256 => ""      - supply an SHA256 (don't recalculate it)
+    sha512 => ""      - supply an SHA512 (don't recalculate it)
 
 ## remove\_file($filename)
 

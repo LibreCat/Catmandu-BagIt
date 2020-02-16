@@ -7,6 +7,7 @@ use Catmandu;
 use Moo;
 use Encode;
 use Digest::MD5;
+use Digest::SHA;
 use IO::File qw();
 use IO::Handle qw();
 use File::Copy;
@@ -28,7 +29,7 @@ use constant {
     FLAG_FETCH        => 0x004 , # Flag indicates updating the fetch.txt file required
     FLAG_DATA         => 0x008 , # Flag indicating new payload data available
     FLAG_TAG_MANIFEST => 0x016 , # Flag indicates updateing tag-manifest-manifest.txt required
-    FLAG_MANIFEST     => 0x032 , # Flag indicates updating manifest-md5.txt required
+    FLAG_MANIFEST     => 0x032 , # Flag indicates updating manifest-{digest}.txt required
     FLAG_DIRTY        => 0x064 , # Flag indicates payload file that hasn't been serialized
 };
 
@@ -58,7 +59,7 @@ has 'path' => (
 has 'version' => (
     is       => 'ro',
     writer   => '_version',
-    default  => '0.97',
+    default  => '1.0',
     init_arg => undef,
 );
 
@@ -94,14 +95,14 @@ has '_fetch' => (
     init_arg => undef,
 );
 
-# A lookup hash of md5 checksums for the tag files
+# A lookup hash of checksums for the tag files
 has '_tag_sums' => (
     is       => 'rw',
     default  => sub { {} },
     init_arg => undef,
 );
 
-# A lookup hahs of md5 checksums for the payload files
+# A lookup hahs of checksums for the payload files
 has '_sums' => (
     is       => 'rw',
     default  => sub { {} },
@@ -113,6 +114,15 @@ has '_info' => (
     is       => 'rw',
     default  => sub { [] },
     init_arg => undef,
+);
+
+# Set the checksum algorithm to use
+has 'algorithm' => (
+    is       => 'ro',
+    default  => sub { 'sha512' },
+    trigger  => sub {
+        die "need md5|sha1|sha256|sha512" unless $_[1] =~ /^md5|sha1|sha256|sha512$/;
+    },
 );
 
 sub _build_user_agent {
@@ -135,11 +145,10 @@ sub BUILD {
     $self->_update_tag_manifest;
 
     # Intialize the names of the basic tag files
-    $self->_tags([qw(
-            bagit.txt
-            bag-info.txt
-            manifest-md5.txt
-            )]);
+    my @tags = qw(bagit.txt bag-info.txt);
+    my $algorithm = $self->algorithm;
+    push @tags , "manifest-$algorithm.txt";
+    $self->_tags(\@tags);
 
     # Set this bag as dirty requiring an update of all the files
     $self->_dirty($self->dirty | FLAG_BAG_INFO | FLAG_TAG_MANIFEST | FLAG_DATA | FLAG_BAGIT);
@@ -210,7 +219,7 @@ sub list_tagsum {
     keys %{$self->_tag_sums};
 }
 
-# Return the md5 checksum of a file
+# Return the checksum of a file
 sub get_tagsum {
     my ($self,$file) = @_;
 
@@ -225,7 +234,7 @@ sub list_checksum {
     keys %{$self->_sums};
 }
 
-# Return the md5 checksum of of a file name
+# Return the checksum of of a file name
 sub get_checksum {
     my ($self,$file) = @_;
 
@@ -256,8 +265,8 @@ sub read {
 
     $ok += $self->_read_version($path);
     $ok += $self->_read_info($path);
-    $ok += $self->_read_tag_manifest($path);
     $ok += $self->_read_manifest($path);
+    $ok += $self->_read_tag_manifest($path);
     $ok += $self->_read_tags($path);
     $ok += $self->_read_files($path);
     $ok += $self->_read_fetch($path);
@@ -350,8 +359,8 @@ sub write {
     # Reread the contents of the bag
     $ok += $self->_read_version($path);
     $ok += $self->_read_info($path);
-    $ok += $self->_read_tag_manifest($path);
     $ok += $self->_read_manifest($path);
+    $ok += $self->_read_tag_manifest($path);
     $ok += $self->_read_tags($path);
     $ok += $self->_read_files($path);
     $ok += $self->_read_fetch($path);
@@ -377,16 +386,26 @@ sub _package_info_file {
     File::Spec->catfile($path,'package-info.txt');
 }
 
-sub _manifest_md5_file {
+sub _manifest_file {
     my ($self,$path) = @_;
 
-    File::Spec->catfile($path,'manifest-md5.txt');
+    for my $alg (qw(md5 sha512 sha256 sha1)) {
+      my $p = File::Spec->catfile($path,"manifest-$alg.txt");
+      return ($p,$alg) if -f $p;
+    }
+
+    return (undef,undef);
 }
 
-sub _tagmanifest_md5_file {
+sub _tagmanifest_file {
     my ($self,$path) = @_;
 
-    File::Spec->catfile($path,'tagmanifest-md5.txt');
+    for my $alg (qw(md5 sha512 sha256 sha1)) {
+      my $p = File::Spec->catfile($path,"tagmanifest-$alg.txt");
+      return ($p,$alg) if -f $p;
+    }
+
+    return (undef,undef);
 }
 
 sub _fetch_file {
@@ -464,17 +483,65 @@ sub add_file {
 
     my $sum;
 
-    if( is_string( $opts{md5} ) && $opts{md5} !~ /^[0-9a-f]{32}$/ ){
-
-        $self->log->error("supplied md5 sum for $filename does not look like an md5 sum");
-        $self->_push_error("supplied md5 sum for $filename does not look like an md5 sum");
-        return;
-
+    if ( is_string($opts{md5}) ) {
+        if ($self->algorithm ne 'md5') {
+            $self->log->error("need a " . $self->algorithm . " checksum not an md5");
+            $self->_push_error("need a " . $self->algorithm . " checksum not an md5");
+            return;
+        }
+        elsif ($opts{md5} =~ /^[0-9a-f]{32}$/) {
+            $sum = $opts{md5};
+        }
+        else {
+            $self->log->error("supplied md5 sum for $filename does not look like an md5 sum");
+            $self->_push_error("supplied md5 sum for $filename does not look like an md5 sum");
+            return;
+        }
     }
-    elsif( is_string( $opts{md5} ) ){
-
-        $sum = $opts{md5};
-
+    elsif ( is_string($opts{sha1}) ) {
+        if ($self->algorithm ne 'sha1') {
+            $self->log->error("need a " . $self->algorithm . " checksum not an sha1");
+            $self->_push_error("need a " . $self->algorithm . " checksum not an sha1");
+            return;
+        }
+        elsif ($opts{sha1} =~ /^[0-9a-f]{5,40}$/) {
+            $sum = $opts{sha1};
+        }
+        else {
+            $self->log->error("supplied sha1 sum for $filename does not look like an sha1 sum");
+            $self->_push_error("supplied sha1 sum for $filename does not look like an sha1 sum");
+            return;
+        }
+    }
+    elsif ( is_string($opts{sha256}) ) {
+        if ($self->algorithm ne 'sha256') {
+            $self->log->error("need a " . $self->algorithm . " checksum not an sha256");
+            $self->_push_error("need a " . $self->algorithm . " checksum not an sha256");
+            return;
+        }
+        elsif ($opts{sha256} =~ /^[A-Fa-f0-9]{64}$/) {
+            $sum = $opts{sha256};
+        }
+        else {
+            $self->log->error("supplied sha256 sum for $filename does not look like an sha256 sum");
+            $self->_push_error("supplied sha256 sum for $filename does not look like an sha256 sum");
+            return;
+        }
+    }
+    elsif ( is_string($opts{sha512}) ) {
+        if ($self->algorithm ne 'sha512') {
+            $self->log->error("need a " . $self->algorithm . " checksum not an sha512");
+            $self->_push_error("need a " . $self->algorithm . " checksum not an sha512");
+            return;
+        }
+        elsif ($opts{sha512} =~ /^[A-Fa-f0-9]{128}$/) {
+            $sum = $opts{sha512};
+        }
+        else {
+            $self->log->error("supplied sha512 sum for $filename does not look like an sha512 sum");
+            $self->_push_error("supplied sha512 sum for $filename does not look like an sha512 sum");
+            return;
+        }
     }
     else {
 
@@ -482,7 +549,7 @@ sub add_file {
 
         binmode($fh,":raw");
 
-        $sum = $self->_md5_sum($fh);
+        $sum = $self->_calc_checksum_sum($fh);
 
         close($fh);
 
@@ -779,7 +846,7 @@ sub valid {
             return (1,"sorry, only serialized (write) bags allowed when validating");
         }
 
-        my $md5 = $tag == 0 ? $self->get_checksum($file) : $self->get_tagsum($file);
+        my $sum = $tag == 0 ? $self->get_checksum($file) : $self->get_tagsum($file);
         my $fh  = $tag == 0 ?
                     new IO::File $self->_payload_file($path,$file), "r" :
                     new IO::File $self->_tag_file($path,$file) , "r";
@@ -791,13 +858,13 @@ sub valid {
 
         binmode($fh,':raw');
 
-        my $md5_check = $self->_md5_sum($fh);
+        my $sum_check = $self->_calc_checksum_sum($fh);
 
         close($fh);
 
-        unless ($md5 eq $md5_check) {
-            $self->log->error("$file checksum fails $md5 <> $md5_check");
-            return (0,"$file checksum fails $md5 <> $md5_check");
+        unless ($sum eq $sum_check) {
+            $self->log->error("$file checksum fails $sum <> $sum_check");
+            return (0,"$file checksum fails $sum <> $sum_check");
         }
 
         (1);
@@ -877,22 +944,23 @@ sub _update_tag_manifest {
     $self->log->debug("updating the tag manifest");
 
     {
-        my $sum = $self->_md5_sum($self->_bagit_as_string);
+        my $sum = $self->_calc_checksum_sum($self->_bagit_as_string);
         $self->_tag_sums->{'bagit.txt'} = $sum;
     }
 
     {
-        my $sum = $self->_md5_sum($self->_baginfo_as_string);
+        my $sum = $self->_calc_checksum_sum($self->_baginfo_as_string);
         $self->_tag_sums->{'bag-info.txt'} = $sum;
     }
 
     {
-        my $sum = $self->_md5_sum($self->_manifest_as_string);
-        $self->_tag_sums->{'manifest-md5.txt'} = $sum;
+        my $sum = $self->_calc_checksum_sum($self->_manifest_as_string);
+        my $algorithm = $self->algorithm;
+        $self->_tag_sums->{"manifest-$algorithm.txt"} = $sum;
     }
 
     if ($self->list_fetch) {
-        my $sum = $self->_md5_sum($self->_fetch_as_string);
+        my $sum = $self->_calc_checksum_sum($self->_fetch_as_string);
         $self->_tag_sums->{'fetch.txt'} = $sum;
 
         unless (grep {/fetch.txt/} $self->list_tags) {
@@ -934,17 +1002,27 @@ sub _read_tag_manifest {
 
     $self->_tag_sums({});
 
-    if (! -f $self->_tagmanifest_md5_file($path)) {
+    my ($manifest,$algorithm) = $self->_tagmanifest_file($path);
+
+    if (! $manifest ) {
         return 1;
     }
 
-    $self->log->debug("reading tagmanifest-md5.txt");
+    $self->log->debug("reading tagmanifest-$algorithm.txt");
 
-    foreach my $line (path($self->_tagmanifest_md5_file($path))->lines_utf8) {
+    foreach my $line (path($manifest)->lines_utf8) {
        $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
         $self->_tag_sums->{$file} = $sum;
+    }
+
+    if ($self->algorithm && $self->algorithm ne $algorithm) {
+        $self->_push_error("no tagmanifest-$algorithm.txt in $path");
+        return 0;
+    }
+    else {
+        $self->{algorithm} = $algorithm;
     }
 
     1;
@@ -953,22 +1031,27 @@ sub _read_tag_manifest {
 sub _read_manifest {
     my ($self, $path) = @_;
 
-    $self->log->debug("reading manifest-md5.txt");
-
     $self->_sums({});
 
-    if (! -f $self->_manifest_md5_file($path)) {
-        $self->_push_error("no manifest-md5.txt in $path");
+    my ($manifest,$algorithm) = $self->_manifest_file($path);
+
+    if (! $manifest ) {
+        $self->_push_error("no manifest-{digest}.txt in $path");
         return 0;
     }
 
-    foreach my $line (path($self->_manifest_md5_file($path))->lines_utf8) {
+    $self->log->debug("reading manifest-$algorithm.txt");
+
+    foreach my $line (path($manifest)->lines_utf8) {
         $line =~ s/\r\n$/\n/g;
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
         $file =~ s/^data\///;
         $self->_sums->{$file} = $sum;
     }
+
+    # The algorithm of the bag will be set by the algorithm of the manifest
+    $self->{algorithm} = $algorithm;
 
     1;
 }
@@ -1263,7 +1346,10 @@ sub _write_manifest {
 
     $self->log->info("writing the manifest file");
 
-    path($self->_manifest_md5_file($path))->spew_utf8($self->_manifest_as_string);
+    my $algorithm = $self->algorithm;
+    my $manifest  = File::Spec->catfile($path,"manifest-$algorithm.txt");
+
+    path($manifest)->spew_utf8($self->_manifest_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_MANIFEST);
 
@@ -1280,8 +1366,8 @@ sub _manifest_as_string {
 
     foreach my $file ($self->list_checksum) {
         next unless -f $self->_payload_file($path,$file);
-        my $md5 = $self->get_checksum($file);
-        $str .= "$md5 data/$file\n";
+        my $sum = $self->get_checksum($file);
+        $str .= "$sum data/$file\n";
     }
 
     $str;
@@ -1297,7 +1383,10 @@ sub _write_tag_manifest {
 
     $self->log->info("writing the tagmanifest file");
 
-    path($self->_tagmanifest_md5_file($path))->spew_utf8($self->_tag_manifest_as_string);
+    my $algorithm = $self->algorithm;
+    my $manifest  = File::Spec->catfile($path,"tagmanifest-$algorithm.txt");
+
+    path($manifest)->spew_utf8($self->_tag_manifest_as_string);
 
     $self->_dirty($self->dirty ^ FLAG_MANIFEST);
 
@@ -1310,17 +1399,26 @@ sub _tag_manifest_as_string {
     my $str = '';
 
     foreach my $file ($self->list_tagsum) {
-        my $md5  = $self->get_tagsum($file);
-        $str .= "$md5 $file\n";
+        my $sum  = $self->get_tagsum($file);
+        $str .= "$sum $file\n";
     }
 
     $str;
 }
 
-sub _md5_sum {
+sub _calc_checksum_sum {
     my ($self, $data) = @_;
 
-    my $ctx = Digest::MD5->new;
+    my $algorithm = $self->algorithm;
+
+    my $ctx;
+
+    if ($algorithm =~ /^sha/) {
+        $ctx = Digest::SHA->new($algorithm);
+    }
+    else {
+        $ctx = Digest::MD5->new;
+    }
 
     if (!defined $data) {
         return $ctx->add(Encode::encode_utf8(''))->hexdigest;
@@ -1372,6 +1470,9 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
     # Assemble a new bag
     my $bagit = Catmandu::BagIt->new;
+
+    # Force a previous version and checksum algorithm
+    my $bagit = Catmandy::BagIt->new(version => '0.97' , algorithm => 'md5');
 
     # Read an existing
     my $bagit = Catmanu::BagIt->read($directory);
@@ -1487,6 +1588,8 @@ of the temp directory can be set with the TMPDIR environmental variable.
 
 =head2 new()
 
+=head2 new(version => ... , algorithm => 'md5|sha1|sha256|sha512')
+
 Create a new BagIt object
 
 =head2 read($directory)
@@ -1601,6 +1704,9 @@ Add a new file to the BagIt. Possible options:
 
     overwrite => 1    - remove the old file
     md5  => ""        - supply an MD5 (don't recalculate it)
+    sha1 => ""        - supply an SHA1 (don't recalculate it)
+    sha256 => ""      - supply an SHA256 (don't recalculate it)
+    sha512 => ""      - supply an SHA512 (don't recalculate it)
 
 =head2 remove_file($filename)
 

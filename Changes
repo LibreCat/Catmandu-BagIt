@@ -1,7 +1,8 @@
 Revision history for Catmandu-BagIt
 
 {{$NEXT}}
-
+    - Add support for BagIt version 1.0
+    
 0.240  2019-12-16 16:31:15 CET
     - Using the Catmandu::FileBag file_streamer instead of own code
 

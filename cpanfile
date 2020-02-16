@@ -14,6 +14,8 @@ on test => sub {
 
 requires 'Catmandu','1.07';
 requires 'Catmandu::FileStore','1.16';
+requires 'Digest::MD5','2.55';
+requires 'Digest::SHA','6.02';
 requires 'LWP::Simple','6.00';
 requires 'Path::Tiny','0.1';
 requires 'Path::Iterator::Rule','1.0';
