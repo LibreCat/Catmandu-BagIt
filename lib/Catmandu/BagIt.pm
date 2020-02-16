@@ -125,6 +125,13 @@ has 'algorithm' => (
     },
 );
 
+# Set if we do file escaping
+has 'escape' => (
+    is       => 'ro',
+    default  => sub { 1 },
+    init_arg => undef,
+);
+
 sub _build_user_agent {
     my ($self) = @_;
     my $ua = LWP::UserAgent->new;
@@ -1047,6 +1054,12 @@ sub _read_manifest {
         chomp($line);
         my ($sum,$file) = split(/\s+/,$line,2);
         $file =~ s/^data\///;
+        # Unescape LF,CR,% when needed
+        if ($self->escape) {
+          $file =~ s{%0A}{\n}mg;
+          $file =~ s{%0D}{\r}mg;
+          $file =~ s{%25}{%}mg;
+        }
         $self->_sums->{$file} = $sum;
     }
 
@@ -1367,6 +1380,12 @@ sub _manifest_as_string {
     foreach my $file ($self->list_checksum) {
         next unless -f $self->_payload_file($path,$file);
         my $sum = $self->get_checksum($file);
+        # Escape LF, CR and % (when needed)
+        if ($self->escape) {
+          $file =~ s{%}{%25}mg;
+          $file =~ s{\n}{%0A}mg;
+          $file =~ s{\r}{%0D}mg;
+        }
         $str .= "$sum data/$file\n";
     }
 
