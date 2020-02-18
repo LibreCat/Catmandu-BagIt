@@ -60,7 +60,6 @@ has 'version' => (
     is       => 'ro',
     writer   => '_version',
     default  => '1.0',
-    init_arg => undef,
 );
 
 # Encoding of all tag manifests
@@ -1491,10 +1490,10 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     my $bagit = Catmandu::BagIt->new;
 
     # Force a previous version and checksum algorithm
-    my $bagit = Catmandy::BagIt->new(version => '0.97' , algorithm => 'md5');
+    my $bagit = Catmandu::BagIt->new(version => '0.97' , algorithm => 'md5');
 
     # Read an existing
-    my $bagit = Catmanu::BagIt->read($directory);
+    my $bagit = Catmandu::BagIt->read($directory);
 
     $bag->read('t/bag');
 
@@ -1526,7 +1525,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     # Read the real listing of files as found on the disk
     printf "files:\n";
     for my $file ($bagit->list_files) {
-        my $stat = [$file->path];
+        my $stat = [stat($file->path)];
         printf " name: %s\n", $file->filename;
         printf " size: %s\n", $stat->[7];
         printf " last-mod: %s\n", scalar(localtime($stat->[9]));
