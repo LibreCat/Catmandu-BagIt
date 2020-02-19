@@ -14,8 +14,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     # Assemble a new bag
     my $bagit = Catmandu::BagIt->new;
 
+    # Force a previous version and checksum algorithm
+    my $bagit = Catmandu::BagIt->new(version => '0.97' , algorithm => 'md5');
+
     # Read an existing
-    my $bagit = Catmanu::BagIt->read($directory);
+    my $bagit = Catmandu::BagIt->read($directory);
 
     $bag->read('t/bag');
 
@@ -47,7 +50,7 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     # Read the real listing of files as found on the disk
     printf "files:\n";
     for my $file ($bagit->list_files) {
-        my $stat = [$file->path];
+        my $stat = [stat($file->path)];
         printf " name: %s\n", $file->filename;
         printf " size: %s\n", $stat->[7];
         printf " last-mod: %s\n", scalar(localtime($stat->[9]));
@@ -101,6 +104,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
     $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt");
     $bagit->remove_fetch("shortstories.txt");
 
+    if ($bagit->errors) {
+        print join("\n",$bagit->errors);
+        exit;
+    }
+
     unless ($bagit->locked) {
         $bagit->write("bags/demo04"); # fails when the bag already exists
         $bagit->write("bags/demo04", new => 1); # recreate the bag when it already existed
@@ -121,6 +129,8 @@ of the temp directory can be set with the TMPDIR environmental variable.
 # METHODS
 
 ## new()
+
+## new(version => ... , algorithm => 'md5|sha1|sha256|sha512')
 
 Create a new BagIt object
 
@@ -236,6 +246,9 @@ Add a new file to the BagIt. Possible options:
 
     overwrite => 1    - remove the old file
     md5  => ""        - supply an MD5 (don't recalculate it)
+    sha1 => ""        - supply an SHA1 (don't recalculate it)
+    sha256 => ""      - supply an SHA256 (don't recalculate it)
+    sha512 => ""      - supply an SHA512 (don't recalculate it)
 
 ## remove\_file($filename)
 
@@ -260,6 +273,10 @@ Remove a fetch entry from the BagIt.
 ## mirror\_fetch($fetch)
 
 Mirror a Catmandu::BagIt::Fetch object to local disk.
+
+# KNOWN LIMITATIONS
+
+This module only supports one manifest-algorithm.txt file per bag.
 
 # SEE ALSO
 
