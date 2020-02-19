@@ -116,7 +116,6 @@ note("files");
     ok   $bagit->add_file("test1.txt","abcdefghijklmnopqrstuvwxyz") , 'add_file';
     ok ! $bagit->add_file("test1.txt","abcdefghijklmnopqrstuvwxyz") , 'add_file overwrite failed';
     ok ! $bagit->add_file("../../../etc/passwd","boo") , 'add_file illegal path';
-    ok ! $bagit->add_file("passwd | dfs ","boo") , 'add_file illegal path';
     ok   $bagit->add_file("test1.txt","abcdefghijklmnopqrstuvwxyz", overwrite => 1) , 'add_file overwrite success';
 
     ok   $bagit->is_dirty , 'bag is dirty';

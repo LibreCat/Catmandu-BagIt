@@ -53,6 +53,7 @@
             "Module::Build" : "0.4229",
             "Moo" : "0",
             "Path::Iterator::Rule" : "1.0",
+            "Path::Naive" : "0.043",
             "Path::Tiny" : "0.1",
             "URI::Escape" : "0",
             "namespace::clean" : "0",

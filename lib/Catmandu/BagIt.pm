@@ -14,6 +14,7 @@ use File::Copy;
 use List::MoreUtils qw(first_index uniq);
 use Path::Tiny;
 use Path::Iterator::Rule;
+use Path::Naive;
 use Catmandu::BagIt::Payload;
 use Catmandu::BagIt::Fetch;
 use POSIX qw(strftime);
@@ -1458,8 +1459,13 @@ sub _calc_checksum_sum {
 sub _is_legal_file_name {
     my ($self, $filename) = @_;
 
-    return 0 unless ($filename =~ /^[[:alnum:]._%-]+$/);
-    return 0 if ($filename =~ m{(^\.|\/\.+\/)});
+    # Adding some security measures to stop people writing data
+    # outside the data directory of the bagit..
+    my $normal = Path::Naive::normalize_path($filename);
+    my $abs    = Path::Naive::abs_path($filename,'/');
+
+    return undef unless ($filename eq $normal);
+    return undef unless ("/$filename" eq $abs);
     return 1;
 }
 
@@ -1578,6 +1584,11 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
     $bagit->add_fetch("http://www.gutenberg.org/cache/epub/1980/pg1980.txt","290000","shortstories.txt");
     $bagit->remove_fetch("shortstories.txt");
+
+    if ($bagit->errors) {
+        print join("\n",$bagit->errors);
+        exit;
+    }
 
     unless ($bagit->locked) {
         $bagit->write("bags/demo04"); # fails when the bag already exists
