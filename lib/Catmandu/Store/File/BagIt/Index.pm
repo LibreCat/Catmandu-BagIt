@@ -53,6 +53,13 @@ sub generator {
             $id =~ s/^0+//;
         }
 
+        if ($self->store->default_case eq 'upper') {
+            $id = uc($id);
+        }
+        else {
+            $id = lc($id);
+        }
+        
         $self->get($id);
     };
 }
