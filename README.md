@@ -117,9 +117,9 @@ Catmandu::BagIt - Low level Catmandu interface to the BagIt packages.
 
 # CATMANDU MODULES
 
-- [Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt)
-- [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt)
-- [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu::Store::File::BagIt)
+- [Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu%3A%3AImporter%3A%3ABagIt)
+- [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu%3A%3AExporter%3A%3ABagIt)
+- [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu%3A%3AStore%3A%3AFile%3A%3ABagIt)
 
 # LARGE FILE SUPPORT
 
@@ -280,7 +280,7 @@ This module only supports one manifest-algorithm.txt file per bag.
 
 # SEE ALSO
 
-[Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu::Importer::BagIt) , [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu::Exporter::BagIt) , [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu::Store::File::BagIt)
+[Catmandu::Importer::BagIt](https://metacpan.org/pod/Catmandu%3A%3AImporter%3A%3ABagIt) , [Catmandu::Exporter::BagIt](https://metacpan.org/pod/Catmandu%3A%3AExporter%3A%3ABagIt) , [Catmandu::Store::File::BagIt](https://metacpan.org/pod/Catmandu%3A%3AStore%3A%3AFile%3A%3ABagIt)
 
 # AUTHOR
 

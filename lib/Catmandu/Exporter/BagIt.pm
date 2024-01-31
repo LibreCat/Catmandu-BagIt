@@ -145,7 +145,10 @@ sub add {
                     or Catmandu::Error->throw("Could not create temp file");
 
             # For now using a simplistic mirror operation
-            my $fname    = $tmp->stringify;
+            my $fname    = $tmp->stringify . '_mirror'; # Use the tmp only as lock
+                                                        # name and create a non-existing
+                                                        # derivative name
+
             my $response = $bagit->user_agent->mirror($url,$fname);
 
             unless ($response->is_success) {
@@ -160,6 +163,8 @@ sub add {
             $bagit->write($directory, overwrite => 1);
 
             undef($tmp);
+
+            unlink($fname);
         }
     }
     if ( exists $data->{files} ) {
